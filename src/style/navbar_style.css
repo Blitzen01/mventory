@@ -1,0 +1,197 @@
+/* 1. BASE SETTINGS & FONTS */
+.sidebar-stark {
+    font-family: 'Inter', sans-serif;
+    width: 16.667%;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: #000;
+    border-right: 1px solid #333;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    z-index: 1050;
+    overflow: visible;
+}
+
+/* 2. TOP NAVBAR (Toggle Area) */
+.navbar-stark {
+    background: transparent;
+    border-bottom: none;
+    padding: 0.7rem 1.5rem;
+    z-index: 1060;
+    pointer-events: none;
+}
+
+.navbar-stark .container-fluid {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+#sidebarToggle {
+    background: #000;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    pointer-events: auto;
+}
+
+#sidebarToggle:hover {
+    background: #fff;
+    color: #000;
+}
+
+/* 3. SIDEBAR HEADER & LOGO */
+.sidebar-header {
+    height: 62px;
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.logo-text {
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    text-transform: none; /* Allows PHP color logic to show */
+}
+
+/* 4. NAVIGATION LINKS (Base & Hover) */
+.nav-link {
+    color: #fff !important;
+    padding: 0.8rem 1.5rem !important;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    opacity: 0.85;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    border-left: 4px solid transparent; /* Smooth transition for active border */
+}
+
+.nav-link:hover {
+    background: rgba(255, 255, 255, 0.05);
+    opacity: 1;
+    margin-left: 0.5rem; /* The minimal nudge effect */
+}
+
+/* 5. MINIMAL ACTIVE STATES */
+/* Standard Active (White) */
+.nav-link.active {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #fff !important;
+    opacity: 1;
+    border-left: 4px solid #fff; 
+    padding-left: 1.2rem !important; 
+    font-weight: 600;
+}
+
+/* Special Active for Damage (Red) */
+.nav-link.active-danger {
+    background: rgba(220, 53, 69, 0.05) !important;
+    color: #dc3545 !important;
+    opacity: 1;
+    border-left: 4px solid #dc3545;
+    padding-left: 1.2rem !important;
+    font-weight: 600;
+}
+
+/* Keep icons bright when active */
+.nav-link.active i, 
+.nav-link.active-danger i {
+    opacity: 1;
+}
+
+/* 6. COLLAPSED SIDEBAR STATE */
+.sidebar-stark.collapsed {
+    width: 75px;
+}
+
+.sidebar-stark.collapsed .logo-text,
+.sidebar-stark.collapsed .link-text,
+.sidebar-stark.collapsed .dropdown-toggle::after {
+    display: none;
+}
+
+.sidebar-stark.collapsed .sidebar-header,
+.sidebar-stark.collapsed .nav-link,
+.sidebar-stark.collapsed .profile-btn {
+    justify-content: center;
+    padding: 0.8rem 0 !important;
+    border-left: none; /* Cleaner look when icons only */
+}
+
+
+.sidebar-footer {
+    margin-top: auto; /* This pushes the footer to the bottom */
+    border-top: 1px solid #333;
+    position: relative; /* Keeps the dropup menu aligned to this area */
+}
+
+.profile-btn {
+    color: #fff;
+    opacity: 0.85;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+/* --- DROPDOWN TRANSITION LOGIC (FIXED) --- */
+.dropdown-menu-stark {
+    background: #000;
+    border: 1px solid #333;
+    
+    /* FIX: Position absolute stops it from pushing the footer */
+    position: absolute !important; 
+    display: block; 
+    
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(10px); 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    z-index: 1100;
+}
+
+/* Show state */
+.dropdown-menu-stark.show {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0); 
+    pointer-events: auto;
+}
+
+/* Ensure the Logs (dropend) slides sideways instead of down */
+.dropend .dropdown-menu-stark {
+    top: 0;
+    left: 100%;
+    margin-left: 5px;
+    transform: translateX(-10px);
+}
+
+.dropend .dropdown-menu-stark.show {
+    transform: translateX(0);
+}
+
+.dropdown-item {
+    color: #fff !important;
+    font-size: 0.8rem;
+    padding: 0.6rem 1.2rem;
+    transition: background 0.2s, padding-left 0.2s;
+}
+
+.dropdown-item:hover {
+    background: #222;
+    padding-left: 1.5rem;
+}

@@ -1,0 +1,364 @@
+/* main_style.css - Modern Professional Monochrome Theme */
+
+:root {
+    --bg-main: #fafafa;
+    --bg-card: #ffffff;
+    --bg-input: #ffffff;
+    --border-color: #e0e0e0;
+    --text-main: #000000;
+    --text-muted: #888888;
+    --stark-gray: #f4f4f4;
+    --stark-black: #000000;
+    --stark-white: #ffffff;
+    --stark-border: #e0e0e0;
+    --accent-dark: #000000;
+    --accent-success: #198754;
+    --accent-danger: #ff0000;
+    --accent-warning: #f59e0b;
+}
+
+/* Global Styles */
+body {
+    background-color: var(--bg-main) !important;
+    color: var(--text-main);
+    font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    width: 100%;
+}
+/* Ensure the main row doesn't exceed screen width */
+.row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+/* Typography */
+h3, h4, h5, .modal-title {
+    color: var(--text-main) !important;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.letter-spacing { letter-spacing: 1px; }
+
+/* Dashboard Metric Cards */
+.metric-card-stark {
+    border: none !important;
+    border-radius: 0 !important;
+    background: var(--bg-card) !important;
+    border-left: 4px solid var(--accent-dark) !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03) !important;
+}
+
+.metric-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+/* Activity Logs */
+.activity-item {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    border-left: 4px solid transparent;
+    transition: background 0.2s;
+}
+
+.activity-item:hover { background: var(--stark-gray); }
+.activity-success { border-left-color: var(--accent-dark); }
+.activity-danger { border-left-color: var(--accent-danger); }
+
+/* Quick Action Buttons */
+.btn-action-stark {
+    background: #fff;
+    border: 1px solid var(--accent-dark);
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+    text-decoration: none;
+    color: inherit;
+}
+
+.btn-action-stark:hover {
+    background: var(--accent-dark);
+    color: #fff !important;
+}
+
+.btn-action-stark:hover .text-muted, 
+.btn-action-stark:hover .text-dark,
+.btn-action-stark:hover .text-danger,
+.btn-action-stark:hover i { 
+    color: #fff !important; 
+}
+
+/* Tables */
+.table thead {
+    background-color: var(--accent-dark) !important;
+}
+
+.table thead th {
+    color: #fff !important;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 12px 15px;
+    border: none;
+}
+
+/* Search Bar Stark Style */
+.search-container-stark {
+    background: #fff;
+    border: 1px solid var(--accent-dark);
+    display: flex;
+    align-items: center;
+    padding: 5px 15px;
+    transition: all 0.2s ease;
+}
+
+.search-input {
+    border: none !important;
+    outline: none !important;
+    width: 100%;
+    padding: 10px;
+    font-size: 0.9rem;
+    background: transparent;
+}
+
+.search-shortcut {
+    font-family: monospace;
+    background: var(--stark-gray);
+    border: 1px solid #ddd;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: #666;
+    margin: 0 10px;
+}
+
+.search-btn {
+    background: var(--accent-dark);
+    color: #fff;
+    border: none;
+    padding: 8px 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+/* Progress Bars */
+.progress { 
+    background-color: #eee; 
+    border-radius: 0; 
+    height: 6px !important; 
+}
+.progress-bar { 
+    background-color: var(--accent-dark); 
+}
+
+.sidebar-stark {
+    width: var(--sidebar-width);
+    height: 100vh;
+    background: #000000;
+    position: fixed;
+    left: 0;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 0;
+    z-index: 1000;
+    border-right: 1px solid #333;
+}
+
+/* Sidebar Links */
+.sidebar-stark .nav-link {
+    color: #ffffff !important;
+    padding: 0.8rem 1.5rem !important;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.7;
+    border-left: 3px solid transparent;
+}
+
+.sidebar-stark .nav-link:hover {
+    opacity: 1;
+    background: rgba(255,255,255,0.05);
+}
+
+.sidebar-stark .nav-link.active {
+    opacity: 1;
+    background: rgba(255,255,255,0.1);
+    border-left: 3px solid #ffffff;
+}
+
+/* Content Area Adjustment */
+.main-content {
+    margin-left: var(--sidebar-width);
+    width: 100%;
+    padding: 2rem;
+}
+
+/* Dropdown inside sidebar */
+.dropdown-menu-stark {
+    background: #111 !important;
+    border: none !important;
+    position: static !important; /* Force it to push items down rather than float */
+    transform: none !important;
+    padding-left: 1rem;
+}
+/* Search Container Overhaul */
+.search-container-stark {
+    background: #fff;
+    border: 1px solid var(--stark-black);
+    display: flex;
+    align-items: center;
+    padding: 5px 15px;
+    transition: all 0.2s ease;
+}
+
+.search-input {
+    border: none !important;
+    outline: none !important;
+    width: 100%;
+    padding: 10px;
+    font-size: 0.9rem;
+}
+
+.search-shortcut {
+    font-family: monospace;
+    background: var(--stark-gray);
+    border: 1px solid #ddd;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: #666;
+    margin: 0 10px;
+}
+
+.search-btn {
+    background: var(--stark-black);
+    color: #fff;
+    border: none;
+    padding: 8px 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+/* Metric Cards */
+.metric-card-stark {
+    border: none;
+    border-radius: 0;
+    background: #fff;
+    border-left: 4px solid var(--stark-black);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+}
+
+.metric-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+    color: #888;
+}
+
+/* Activity Logs */
+.activity-item {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    border-left: 4px solid transparent;
+    transition: background 0.2s;
+}
+
+.activity-item:hover { background: var(--stark-gray); }
+.activity-success { border-left-color: #000; }
+.activity-warning { border-left-color: #666; }
+.activity-danger { border-left-color: #ff0000; }
+
+/* Action Buttons */
+.btn-action-stark {
+    background: #fff;
+    border: 1px solid var(--stark-black);
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+    text-decoration: none;
+    color: inherit;
+}
+
+.btn-action-stark:hover {
+    background: var(--stark-black);
+    color: #fff !important;
+}
+
+.btn-action-stark:hover .text-muted, 
+.btn-action-stark:hover .text-dark,
+.btn-action-stark:hover .text-danger,
+.btn-action-stark:hover i { 
+    color: #fff !important; 
+}
+
+/* Progress Bar */
+.progress {
+    background-color: #eee; 
+    border-radius: 0; 
+    height: 6px !important; 
+}
+.progress-bar {
+     background-color: var(--stark-black); 
+}
+
+
+.form-control {
+    border-radius: 0px;
+    border: 1px solid #d1d1d1;
+    padding: 12px;
+    font-size: 0.9rem;
+}
+
+.form-control:focus {
+    border-color: #000000 !important;
+    box-shadow: none !important;
+    background-color: #fafafa !important;
+}
+
+/* Custom Monochrome Scrollbar */
+
+/* 1. The width and height of the scrollbar */
+::-webkit-scrollbar {
+    width: 8px !important;  /* Vertical scrollbar width */
+    height: 8px !important; /* Horizontal scrollbar height */
+}
+
+/* 2. The background of the scrollbar (Track) */
+::-webkit-scrollbar-track {
+    background: #f1f1f1 !important; /* Very light gray to stay monochrome */
+    border-left: 1px solid #e0e0e0 !important;
+}
+
+/* 3. The moving part (Thumb) */
+::-webkit-scrollbar-thumb {
+    background: #000000 !important; /* Solid black for high contrast */
+    border-radius: 0px !important;  /* Square edges to match your "Prof" theme */
+}
+
+/* 4. Hover effect on the thumb */
+::-webkit-scrollbar-thumb:hover {
+    background: #333333 !important; /* Dark gray on hover */
+}
+
+/* Optional: Styling for Firefox (Limited Support) */
+* {
+    scrollbar-width: thin !important;
+    scrollbar-color: #000000 #f1f1f1 !important;
+}
