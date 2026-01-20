@@ -37,7 +37,7 @@
                                 <p class="text-muted small">Track and manage items currently deployed to Head Office and Store locations.</p>
                             </div>
                             <div class="btn-group shadow-sm">
-                                <a href="inventory_display.html" class="btn btn-white border border-dark-subtle">
+                                <a href="inventory.php" class="btn btn-white border border-dark-subtle">
                                     <i class="fa-solid fa-arrow-left me-1 text-muted"></i> Back to Inventory
                                 </a>
                             </div>

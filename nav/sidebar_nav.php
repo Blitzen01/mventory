@@ -38,6 +38,19 @@
     }
 ?>
 
+<style>
+    /* Logout button color fix */
+    .dropdown-menu-stark .logout-item {
+        color: #dc3545 !important;
+    }
+
+    .dropdown-menu-stark .logout-item:hover,
+    .dropdown-menu-stark .logout-item:focus {
+        color: #dc3545 !important;
+        background-color: rgba(220, 53, 69, 0.15);
+    }
+</style>
+
 <link rel="stylesheet" href="../src/style/navbar_style.css">
 
 <div class="sidebar-stark" id="sidebar">
@@ -108,7 +121,11 @@
             <li><a class="dropdown-item" href="profile.php">Profile</a></li>
             <li><a class="dropdown-item" href="settings.php">Settings</a></li>
             <li><hr class="dropdown-divider border-secondary"></li>
-            <li><a class="dropdown-item text-danger fw-bold" href="logout.php">Sign Out</a></li>
+            <li>
+                <a class="dropdown-item fw-bold logout-item" href="logout.php">
+                    Sign Out
+                </a>
+            </li>
         </ul>
     </div>
 </div>

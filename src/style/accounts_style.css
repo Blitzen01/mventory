@@ -39,8 +39,19 @@
     animation: pulse-animation 2s infinite;
 }
 
+/* Adds a little letter spacing to labels for a cleaner look */
+.ls-1 { letter-spacing: 1px; }
+/* Ensures inputs don't have the default blue glow when focused, keeping it monochrome */
+.form-control:focus, .form-select:focus {
+    border-color: #6c757d; /* Bootstrap gray-600 */
+    box-shadow: 0 0 0 0.25rem rgba(108, 117, 125, 0.25); /* Gray shadow */
+}
+/* Input group text styling to blend in */
+.input-group-text { border-color: #ced4da; }
+
 @keyframes pulse-animation {
     0% { opacity: 1; }
     50% { opacity: 0.5; }
     100% { opacity: 1; }
 }
+

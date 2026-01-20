@@ -186,6 +186,70 @@
                                                     </div>
                                                     <button type="submit" class="btn btn-black">Save Inventory Rules</button>
                                                 </form>
+
+                                                <hr class="my-5">
+
+                                                <div class="row g-4">
+                                                    <div class="col-md-6">
+                                                        <h5 class="section-title mb-4">Manage Categories</h5>
+                                                        
+                                                        <form action="update_settings.php" method="POST" class="mb-3">
+                                                            <input type="hidden" name="scope" value="add_category">
+                                                            <label class="form-label">Add New Category</label>
+                                                            <div class="input-group">
+                                                                <input type="text" name="category_name" class="form-control" placeholder="e.g. Electronics" required>
+                                                                <button type="submit" class="btn btn-black">Add</button>
+                                                            </div>
+                                                        </form>
+
+                                                        <form action="update_settings.php" method="POST">
+                                                            <input type="hidden" name="scope" value="remove_category">
+                                                            <label class="form-label">Remove Existing Category</label>
+                                                            <div class="input-group">
+                                                                <select name="category_id" class="form-select" required>
+                                                                    <option value="" selected disabled>Select category to remove</option>
+                                                                    <?php 
+                                                                    // Example PHP loop to populate categories
+                                                                    // foreach($categories as $cat) { 
+                                                                    //    echo "<option value='{$cat['id']}'>{$cat['name']}</option>"; 
+                                                                    // } 
+                                                                    ?>
+                                                                </select>
+                                                                <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Are you sure?')">Remove</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <h5 class="section-title mb-4">Manage Item Masterlist</h5>
+                                                        
+                                                        <form action="update_settings.php" method="POST" class="mb-3">
+                                                            <input type="hidden" name="scope" value="add_item_name">
+                                                            <label class="form-label">Add New Item Name</label>
+                                                            <div class="input-group">
+                                                                <input type="text" name="item_name" class="form-control" placeholder="e.g. Wireless Mouse" required>
+                                                                <button type="submit" class="btn btn-black">Add</button>
+                                                            </div>
+                                                        </form>
+
+                                                        <form action="update_settings.php" method="POST">
+                                                            <input type="hidden" name="scope" value="remove_item_name">
+                                                            <label class="form-label">Remove Item Name</label>
+                                                            <div class="input-group">
+                                                                <select name="item_id" class="form-select" required>
+                                                                    <option value="" selected disabled>Select item to remove</option>
+                                                                    <?php 
+                                                                    // Example PHP loop to populate items
+                                                                    // foreach($items as $item) { 
+                                                                    //    echo "<option value='{$item['id']}'>{$item['name']}</option>"; 
+                                                                    // } 
+                                                                    ?>
+                                                                </select>
+                                                                <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Are you sure?')">Remove</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
                                             </div>
 
                                             <div class="tab-pane fade" id="alerts" role="tabpanel">
