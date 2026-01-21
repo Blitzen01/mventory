@@ -9,6 +9,8 @@
     
     include "../render/connection.php"; 
     include "../src/cdn/cdn_links.php";
+    include "../render/modals.php";
+
     include "../src/fetch/count_total_users_querry.php";
 
     // Count total users
@@ -20,6 +22,15 @@
     $online_query = "SELECT COUNT(*) as online FROM users WHERE is_login = 1";
     $online_result = $conn->query($online_query);
     $online_count = $online_result->fetch_assoc()['online'];
+
+    // Count total items in inventory
+    $total_items_query = "SELECT COUNT(*) as total_items FROM assets";
+    $total_items_result = $conn->query($total_items_query);
+    $total_items = $total_items_result->fetch_assoc()['total_items'];
+
+    $total_item_value = "SELECT SUM(cost * quantity) as total_value FROM assets";
+    $total_value_result = $conn->query($total_item_value);
+    $total_value = $total_value_result->fetch_assoc()['total_value'];
 ?>
 
 
@@ -87,7 +98,7 @@
                                     <div class="card-body d-flex justify-content-between align-items-center">
                                         <div>
                                             <div class="metric-label small text-uppercase fw-bold text-muted mb-1" style="letter-spacing: 1px;">Total Items</div>
-                                            <div class="h4 m-0 fw-bold">125</div>
+                                            <div class="h4 m-0 fw-bold"><?php echo htmlspecialchars($total_items); ?></div>
                                         </div>
                                         <i class="fa-solid fa-boxes-stacked fa-2x text-muted opacity-25"></i>
                                     </div>
@@ -99,7 +110,7 @@
                                     <div class="card-body d-flex justify-content-between align-items-center">
                                         <div>
                                             <div class="metric-label small text-uppercase fw-bold text-muted mb-1" style="letter-spacing: 1px;">Total Value</div>
-                                            <div class="h4 m-0 fw-bold">₱1,250,000</div>
+                                            <div class="h4 m-0 fw-bold">₱<?php echo number_format($total_value, 2, '.', ','); ?></div>
                                         </div>
                                         <i class="fa-solid fa-file-invoice-dollar fa-2x text-muted opacity-25"></i>
                                     </div>
@@ -224,29 +235,29 @@
                             <div class="col-lg-4 mb-4">
                                 <h6 class="fw-bold text-dark mb-3 text-uppercase small letter-spacing">Quick Operations</h6>
                                 
-                                <a href="add_stock.php" class="btn-action-stark shadow-sm">
+                                <button class="btn-action-stark shadow-sm" data-bs-toggle="modal" data-bs-target="#addProductModal" style="width: 100%;">
                                     <i class="fa-solid fa-plus-circle fa-xl me-3"></i>
-                                    <div>
+                                    <div class="text-start">
                                         <div class="fw-bold small">Add Stock</div>
                                         <div class="text-muted small" style="font-size: 11px;">Restock existing inventory</div>
                                     </div>
-                                </a>
+                                </button>
 
-                                <a href="add_user.php" class="btn-action-stark shadow-sm">
+                                <button class="btn-action-stark shadow-sm" style="width: 100%; margin-top: 10px;" data-bs-toggle="modal" data-bs-target="">
                                     <i class="fa-solid fa-user-plus fa-xl me-3"></i>
-                                    <div>
+                                    <div class="text-start">
                                         <div class="fw-bold small">Add Account</div>
                                         <div class="text-muted small" style="font-size: 11px;">Register new team member</div>
                                     </div>
-                                </a>
+                                </button>
 
-                                <a href="report_damage.php" class="btn-action-stark shadow-sm border-danger">
+                                <button class="btn-action-stark shadow-sm border-danger" style="width: 100%; margin-top: 10px;" data-bs-toggle="modal" data-bs-target="">
                                     <i class="fa-solid fa-circle-exclamation text-danger fa-xl me-3"></i>
-                                    <div>
+                                    <div class="text-start">
                                         <div class="fw-bold text-danger small">Report Damage</div>
                                         <div class="text-muted small" style="font-size: 11px;">Log broken or expired items</div>
                                     </div>
-                                </a>
+                                </button>
                             </div>
                         </div>
                     </div>

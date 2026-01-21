@@ -261,23 +261,30 @@
     </div>
 </div>
 
+<!-- add assets modal start -->
 <div class="modal fade" id="addProductModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <form action="../src/php_script/process_add_item.php" method="POST">
             <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-dark text-white">
+                <div class="modal-header">
                     <h5 class="modal-title fw-bold"><i class="fa-solid fa-plus-circle me-2"></i>Add Hardware Assets</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="fw-bold small">Asset ID Prefix</label>
-                            <input type="text" name="id_prefix" class="form-control" placeholder="e.g. PC-SET" required>
+                            <input type="text" name="id_prefix" class="form-control" list="assetBaseList" placeholder="e.g., LAPTOP" required autocomplete="off">
+                            <datalist id="assetBaseList">
+                                <?php
+                                $bases = mysqli_query($conn, "SELECT DISTINCT TRIM(SUBSTRING(asset_id, 1, LENGTH(asset_id) - LENGTH(SUBSTRING_INDEX(asset_id, '-', -1)) - 1)) AS base_asset FROM assets ORDER BY base_asset ASC");
+                                while ($b = mysqli_fetch_assoc($bases)) { echo '<option value="'.$b['base_asset'].'">'; }
+                                ?>
+                            </datalist>
                         </div>
                         <div class="col-md-2">
                             <label class="fw-bold small">Qty</label>
-                            <input type="number" name="bulk_qty" class="form-control" value="1" min="1">
+                            <input type="number" name="bulk_qty" class="form-control" value="1" min="1" required>
                         </div>
                         <div class="col-md-6">
                             <label class="fw-bold small">Category</label>
@@ -291,18 +298,42 @@
                             </select>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="fw-bold small">Item Name</label>
-                            <input type="text" name="item_name" class="form-control" required>
+                        <div class="col-md-4">
+                            <label class="fw-bold small">Brand</label>
+                            <input type="text" name="brand" class="form-control" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="fw-bold small text-danger">Specifications (Fixed)</label>
-                            <input type="text" name="specs" class="form-control" placeholder="CPU, RAM, Storage">
+                        <div class="col-md-4">
+                            <label class="fw-bold small">Model</label>
+                            <input type="text" name="model" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="fw-bold small">Serial Number</label>
+                            <input type="text" name="serial_number" class="form-control" placeholder="Optional for bulk">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="fw-bold small">Item Name</label>
+                            <div class="input-group">
+                                <input type="text" name="item_name" class="form-control" placeholder="e.g. Dell Workstation Set" required>
+                                <button class="btn btn-outline-danger" type="button" data-bs-toggle="collapse" data-bs-target="#specsCollapse">
+                                    <i class="fa-solid fa-gears"></i> Toggle Specs
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="collapse col-12" id="specsCollapse">
+                            <div class="card card-body bg-light border-danger-subtle">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="fw-bold small text-danger mb-0">Specifications</label>
+                                    <button type="button" class="btn btn-sm btn-link text-decoration-none p-0" onclick="applyPcTemplate()">Apply PC Template</button>
+                                </div>
+                                <textarea id="specsField" name="specs" class="form-control" rows="5" placeholder="Enter hardware details here..."></textarea>
+                            </div>
                         </div>
 
                         <div class="col-md-4">
-                            <label class="fw-bold small">Location (Assigned To)</label>
-                            <input type="text" name="assigned_to" class="form-control">
+                            <label class="fw-bold small">Location</label>
+                            <input type="text" name="assigned_to" class="form-control" required>
                         </div>
                         <div class="col-md-4">
                             <label class="fw-bold small">Condition</label>
@@ -313,7 +344,7 @@
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="fw-bold small">Initial Status</label>
+                            <label class="fw-bold small">Status</label>
                             <select name="status" class="form-select">
                                 <option>In Stock</option>
                                 <option>Deployed</option>
@@ -338,8 +369,8 @@
                         </div>
 
                         <div class="col-12">
-                            <label class="fw-bold small text-primary">Initial Remarks</label>
-                            <textarea name="remarks" class="form-control" rows="2" placeholder="Maintenance notes or extra details..."></textarea>
+                            <label class="fw-bold small text-primary">Remarks</label>
+                            <textarea name="remarks" class="form-control" rows="2"></textarea>
                         </div>
                     </div>
                 </div>
@@ -350,3 +381,192 @@
         </form>
     </div>
 </div>
+
+<script>
+function applyPcTemplate() {
+    const template = "CPU: \nRAM: \nSTORAGE: \nGPU: \nPSU: \nOS: ";
+    document.getElementById('specsField').value = template;
+    document.getElementById('specsField').focus();
+}
+</script>
+<!-- add assets modal end -->
+
+
+<!-- allocate assets modal start -->
+<div class="modal fade" id="allocateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-0">
+            <div class="modal-header border-bottom py-3">
+                <h6 class="modal-title fw-bold text-uppercase tracking-wider">Asset Allocation</h6>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <form action="../src/php_script/process_allocate.php" method="POST">
+                <div class="modal-body p-4">
+                    <div class="mb-4">
+                        <small class="text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Currently Modifying:</small>
+                        <h5 class="mb-0 fw-bold" id="modal-item-name">---</h5>
+                        <code class="text-dark fw-bold" id="modal-asset-id">---</code>
+                    </div>
+
+                    <div class="row g-0 align-items-center mb-4 border bg-light">
+                        <div class="col-5 p-3">
+                            <small class="d-block text-muted text-uppercase fw-bold mb-1" style="font-size: 0.55rem;">Current Assignment</small>
+                            <div class="fw-bold text-dark text-truncate" id="modal-current-holder">---</div>
+                        </div>
+                        <div class="col-2 text-center">
+                            <i class="fa-solid fa-arrow-right text-muted"></i>
+                        </div>
+                        <div class="col-5 p-3 border-start bg-white text-center">
+                            <small class="d-block text-muted text-uppercase fw-bold mb-1" style="font-size: 0.55rem;">Action</small>
+                            <span class="badge bg-dark rounded-0">REPLACE</span>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="asset_db_id" id="allocate-db-id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase">New Assigned User / Dept</label>
+                        <input type="text" name="assignee" class="form-control rounded-0 border-dark shadow-none form-control-lg" placeholder="Type new assignee here..." required>
+                        <div class="form-text" style="font-size: 0.65rem;">This will overwrite the current assignment in the database.</div>
+                    </div>
+                    
+                    <div class="mb-0">
+                        <label class="form-label fw-bold small text-uppercase">Transfer Date</label>
+                        <input type="date" name="allocation_date" class="form-control rounded-0 border-dark shadow-none" value="<?= date('Y-m-d') ?>">
+                    </div>
+                </div>
+                
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-outline-secondary rounded-0 px-4 text-uppercase fw-bold small" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-dark rounded-0 px-4 text-uppercase fw-bold small">Update Allocation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- allocate assets modal start -->
+
+<!-- damage assets modal start -->
+<div class="modal fade" id="damageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-0">
+            <div class="modal-header border-bottom py-3">
+                <h6 class="modal-title fw-bold text-uppercase tracking-wider">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>Damage Report
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <form action="../src/php_script/process_damage.php" method="POST">
+                <div class="modal-body p-4">
+                    <div class="mb-4 pb-3 border-bottom">
+                        <small class="text-muted d-block text-uppercase fw-bold mb-1" style="font-size: 0.6rem;">Target Asset</small>
+                        <h6 class="mb-0 fw-bold text-dark" id="damage-display-name">---</h6>
+                        <code class="text-muted" id="damage-display-id" style="font-size: 0.75rem;">---</code>
+                    </div>
+
+                    <input type="hidden" name="asset_db_id" id="damage-db-id">
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold small text-uppercase">Initial Recommendation</label>
+                            <select name="recommendation" class="form-select rounded-0 border-dark shadow-none" required>
+                                <option value="" selected disabled>-- Select Action --</option>
+                                <option value="Repairable">FOR REPAIR (Minor Damage)</option>
+                                <option value="Replacement">FOR REPLACEMENT (Major Damage)</option>
+                                <option value="Disposal">FOR DISPOSAL (Beyond Repair)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase">Damage Description</label>
+                        <textarea name="damage_description" class="form-control rounded-0 border-dark shadow-none" rows="3" placeholder="Explain the nature of damage..." required></textarea>
+                    </div>
+
+                    <div class="bg-light p-2 border">
+                        <div class="form-check small">
+                            <input class="form-check-input" type="checkbox" id="confirmDamage" required>
+                            <label class="form-check-label text-muted" for="confirmDamage">
+                                Confirm this asset is currently non-functional.
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-outline-secondary rounded-0 px-4 text-uppercase fw-bold small" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-dark rounded-0 px-4 text-uppercase fw-bold small">Submit Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- damage assets modal end -->
+
+<!-- edit assets modal start -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header py-3">
+                <h6 class="modal-title text-uppercase fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i> Correction Mode</h6>
+                <button type="button" class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <form action="../src/php_script/update_asset.php" method="POST">
+                <div class="modal-body p-4">
+                    <div class="bg-light p-3 rounded mb-4 border-start border-4 border-warning">
+                        <small class="text-muted d-block fw-bold mb-1" style="font-size: 0.6rem;">ASSET IDENTIFIER</small>
+                        <h5 class="mb-0 fw-bold text-dark" id="edit-display-name">---</h5>
+                        <code class="text-primary fw-bold" id="edit-display-assetid">---</code>
+                    </div>
+
+                    <input type="hidden" name="asset_db_id" id="edit-db-id">
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Item Name</label>
+                            <input type="text" name="item_name" id="edit-item-name" class="form-control form-control-sm shadow-sm">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-primary text-uppercase">
+                                <i class="fa-solid fa-layer-group me-1"></i> Correct Category
+                            </label>
+                            <select name="category_id" id="edit-category" class="form-select form-select-sm border-primary shadow-sm" required>
+                                <option value="" disabled>-- Select Correct Category --</option>
+                                <?php 
+                                    $cat_list = mysqli_query($conn, "SELECT category_id, category_name FROM categories ORDER BY category_name ASC");
+                                    while($c = mysqli_fetch_assoc($cat_list)): 
+                                ?>
+                                    <option value="<?= $c['category_id'] ?>"><?= strtoupper($c['category_name']) ?></option>
+                                <?php endwhile; ?>
+                            </select>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Current Condition</label>
+                            <select name="condition_status" id="edit-condition" class="form-select form-select-sm shadow-sm">
+                                <option value="New">NEW</option>
+                                <option value="Used">USED</option>
+                                <option value="Repaired">RAPAIRED</option>
+                                <option value="Defective">DEFECTIVE</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Correction Remarks</label>
+                            <textarea name="new_remark" class="form-control form-control-sm shadow-sm" rows="3" placeholder="Describe why this correction is being made..." required></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-sm btn-secondary fw-bold px-3" data-bs-dismiss="modal">CANCEL</button>
+                    <button type="submit" class="btn btn-sm btn-dark fw-bold px-4 shadow-sm">SAVE CORRECTION</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- edit assets modal end -->
