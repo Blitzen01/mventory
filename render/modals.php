@@ -105,6 +105,7 @@
 </div>
 <!-- view archieve modal end -->
 
+
 <!-- restore user modal start -->
 <div class="modal fade" id="restoreUserModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -261,6 +262,82 @@
     </div>
 </div>
 
+
+<!-- add user account modal start -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold text-primary"><i class="fa-solid fa-user-plus me-2"></i> Create Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addUserForm" method="POST" action="../src/php_script/add_account.php">
+                <div class="modal-body px-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted text-uppercase">First Name</label>
+                            <input type="text" class="form-control bg-light border-0" id="gen_first_name" name="first_name" placeholder="John" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Last Name</label>
+                            <input type="text" class="form-control bg-light border-0" id="gen_last_name" name="last_name" placeholder="Doe" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Email Address</label>
+                            <input type="email" class="form-control bg-light border-0" name="email" placeholder="john@example.com" required>
+                        </div>
+                        <div class="col-12 border-bottom pb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Assign Role</label>
+                            <select class="form-select bg-light border-0" id="gen_role" name="role" required>
+                                <option value="" selected disabled>Select Role...</option>
+                                <option value="Administrator">Administrator</option>
+                                <option value="Inventory Manager">Inventory Manager</option>
+                                <option value="Stock Handler">Stock Handler</option>
+                                <option value="Viewer">Viewer</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-12 mt-3">
+                            <div class="p-3 border-0 rounded-4" style="background-color: #f0f7ff; border: 1px dashed #0d6efd !important;">
+                                <label class="d-block small fw-bold text-primary text-uppercase mb-3">Login Credentials</label>
+                                
+                                <div class="mb-3">
+                                    <small class="text-muted d-block mb-1">Username:</small>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" name="username" id="display_username" class="form-control border-0 bg-white fw-bold" readonly value="---">
+                                        <button class="btn btn-outline-primary border-0 bg-white" type="button" onclick="copyToClipboard('display_username', this)">
+                                            <i class="fa-regular fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <small class="text-muted d-block mb-1">Temporary Password:</small>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" name="password" id="display_password" class="form-control border-0 bg-white fw-bold" readonly value="---">
+                                        <button class="btn btn-outline-primary border-0 bg-white" type="button" onclick="copyToClipboard('display_password', this)">
+                                            <i class="fa-regular fa-copy"></i>
+                                        </button>
+                                        <button class="btn btn-outline-secondary border-0 bg-white" type="button" onclick="generateNewPassword()">
+                                            <i class="fa-solid fa-arrows-rotate"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pb-4 px-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold">Save Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- add user account modal end -->
+
+
 <!-- add assets modal start -->
 <div class="modal fade" id="addProductModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -381,10 +458,9 @@
         </form>
     </div>
 </div>
-
 <script>
 function applyPcTemplate() {
-    const template = "CPU: \nRAM: \nSTORAGE: \nGPU: \nPSU: \nOS: ";
+    const template = "CPU: \nRAM: \nMOTHERBOARD: \nSTORAGE: \nGPU: \nPSU: \nOS: ";
     document.getElementById('specsField').value = template;
     document.getElementById('specsField').focus();
 }
@@ -447,57 +523,71 @@ function applyPcTemplate() {
 </div>
 <!-- allocate assets modal start -->
 
+
 <!-- damage assets modal start -->
 <div class="modal fade" id="damageModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-0">
             <div class="modal-header border-bottom py-3">
-                <h6 class="modal-title fw-bold text-uppercase tracking-wider">
-                    <i class="fa-solid fa-triangle-exclamation me-2"></i>Damage Report
+                <h6 class="modal-title fw-bold text-uppercase">
+                    <i class="fa-solid fa-triangle-exclamation me-2 text-warning"></i>Damage Incident Report
                 </h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
             </div>
             
             <form action="../src/php_script/process_damage.php" method="POST">
                 <div class="modal-body p-4">
                     <div class="mb-4 pb-3 border-bottom">
-                        <small class="text-muted d-block text-uppercase fw-bold mb-1" style="font-size: 0.6rem;">Target Asset</small>
+                        <small class="text-muted d-block text-uppercase fw-bold mb-1" style="font-size: 0.6rem;">Currently Reporting For:</small>
                         <h6 class="mb-0 fw-bold text-dark" id="damage-display-name">---</h6>
-                        <code class="text-muted" id="damage-display-id" style="font-size: 0.75rem;">---</code>
+                        <code class="text-danger fw-bold" id="damage-display-id" style="font-size: 0.75rem;">---</code>
                     </div>
 
                     <input type="hidden" name="asset_db_id" id="damage-db-id">
 
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase text-muted">Scope of Damage</label>
+                        <div class="d-flex gap-2">
+                            <input type="radio" class="btn-check" name="damage_scope" id="scope_part" value="component" checked>
+                            <label class="btn btn-sm btn-outline-dark rounded-0 w-100 fw-bold" for="scope_part">PART/COMPONENT</label>
+
+                            <input type="radio" class="btn-check" name="damage_scope" id="scope_all" value="entire">
+                            <label class="btn btn-sm btn-outline-danger rounded-0 w-100 fw-bold" for="scope_all">ENTIRE UNIT</label>
+                        </div>
+                        <div class="form-text" style="font-size: 0.65rem;">Choose 'Entire Unit' to mark the item as non-functional.</div>
+                    </div>
+
                     <div class="row g-3 mb-3">
                         <div class="col-md-12">
                             <label class="form-label fw-bold small text-uppercase">Initial Recommendation</label>
-                            <select name="recommendation" class="form-select rounded-0 border-dark shadow-none" required>
+                            <select name="recommendation" class="form-select form-select-sm rounded-0 border-dark shadow-none" required>
                                 <option value="" selected disabled>-- Select Action --</option>
-                                <option value="Repairable">FOR REPAIR (Minor Damage)</option>
-                                <option value="Replacement">FOR REPLACEMENT (Major Damage)</option>
-                                <option value="Disposal">FOR DISPOSAL (Beyond Repair)</option>
+                                <option value="Repairable">FOR REPAIR (Internal)</option>
+                                <option value="Warranty">WARRANTY CLAIM (External)</option>
+                                <option value="Replacement">FOR REPLACEMENT</option>
+                                <option value="Disposal">FOR DISPOSAL</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold small text-uppercase">Damage Description</label>
-                        <textarea name="damage_description" class="form-control rounded-0 border-dark shadow-none" rows="3" placeholder="Explain the nature of damage..." required></textarea>
+                        <label class="form-label fw-bold small text-uppercase">Incident Description</label>
+                        <textarea name="damage_description" class="form-control form-control-sm rounded-0 border-dark shadow-none" rows="3" placeholder="Identify specific part (e.g. Keyboard) and nature of damage..." required></textarea>
                     </div>
 
-                    <div class="bg-light p-2 border">
+                    <div class="bg-light p-3 border-start border-3 border-danger">
                         <div class="form-check small">
                             <input class="form-check-input" type="checkbox" id="confirmDamage" required>
-                            <label class="form-check-label text-muted" for="confirmDamage">
-                                Confirm this asset is currently non-functional.
+                            <label class="form-check-label fw-bold text-dark" for="confirmDamage" style="font-size: 0.7rem;">
+                                I confirm that this report is accurate and will be logged under my account (<?= $_SESSION['username'] ?>).
                             </label>
                         </div>
                     </div>
                 </div>
                 
                 <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="button" class="btn btn-outline-secondary rounded-0 px-4 text-uppercase fw-bold small" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-dark rounded-0 px-4 text-uppercase fw-bold small">Submit Report</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-0 px-4 fw-bold" data-bs-dismiss="modal">CANCEL</button>
+                    <button type="submit" class="btn btn-sm btn-danger rounded-0 px-4 fw-bold">SUBMIT INCIDENT</button>
                 </div>
             </form>
         </div>
@@ -505,21 +595,24 @@ function applyPcTemplate() {
 </div>
 <!-- damage assets modal end -->
 
+
 <!-- edit assets modal start -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-md modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header py-3">
-                <h6 class="modal-title text-uppercase fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i> Correction Mode</h6>
-                <button type="button" class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
+        <div class="modal-content border-0 shadow-lg rounded-0">
+            <div class="modal-header py-3 border-bottom">
+                <h6 class="modal-title text-uppercase fw-bold text-dark">
+                    <i class="fa-solid fa-pen-to-square me-2"></i> Correction Mode
+                </h6>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
             </div>
             
             <form action="../src/php_script/update_asset.php" method="POST">
                 <div class="modal-body p-4">
-                    <div class="bg-light p-3 rounded mb-4 border-start border-4 border-warning">
-                        <small class="text-muted d-block fw-bold mb-1" style="font-size: 0.6rem;">ASSET IDENTIFIER</small>
+                    <div class="bg-light p-3 rounded-0 mb-4 border-start border-4 border-dark">
+                        <small class="text-muted d-block fw-bold mb-1" style="font-size: 0.6rem; letter-spacing: 1px;">ASSET IDENTIFIER</small>
                         <h5 class="mb-0 fw-bold text-dark" id="edit-display-name">---</h5>
-                        <code class="text-primary fw-bold" id="edit-display-assetid">---</code>
+                        <code class="text-muted fw-bold" id="edit-display-assetid">---</code>
                     </div>
 
                     <input type="hidden" name="asset_db_id" id="edit-db-id">
@@ -527,15 +620,13 @@ function applyPcTemplate() {
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label small fw-bold text-muted text-uppercase">Item Name</label>
-                            <input type="text" name="item_name" id="edit-item-name" class="form-control form-control-sm shadow-sm">
+                            <input type="text" name="item_name" id="edit-item-name" class="form-control form-control-sm rounded-0 border-dark shadow-none">
                         </div>
 
                         <div class="col-12">
-                            <label class="form-label small fw-bold text-primary text-uppercase">
-                                <i class="fa-solid fa-layer-group me-1"></i> Correct Category
-                            </label>
-                            <select name="category_id" id="edit-category" class="form-select form-select-sm border-primary shadow-sm" required>
-                                <option value="" disabled>-- Select Correct Category --</option>
+                            <label class="form-label small fw-bold text-dark text-uppercase">Correct Category</label>
+                            <select name="category_id" id="edit-category" class="form-select form-select-sm rounded-0 border-dark shadow-none" required>
+                                <option value="" disabled selected>-- Select --</option>
                                 <?php 
                                     $cat_list = mysqli_query($conn, "SELECT category_id, category_name FROM categories ORDER BY category_name ASC");
                                     while($c = mysqli_fetch_assoc($cat_list)): 
@@ -547,26 +638,115 @@ function applyPcTemplate() {
 
                         <div class="col-md-12">
                             <label class="form-label small fw-bold text-muted text-uppercase">Current Condition</label>
-                            <select name="condition_status" id="edit-condition" class="form-select form-select-sm shadow-sm">
+                            <select name="condition_status" id="edit-condition" class="form-select form-select-sm rounded-0 border-dark shadow-none">
                                 <option value="New">NEW</option>
                                 <option value="Used">USED</option>
-                                <option value="Repaired">RAPAIRED</option>
+                                <option value="Repaired">REPAIRED</option>
                                 <option value="Defective">DEFECTIVE</option>
                             </select>
                         </div>
-
-                        <div class="col-12">
-                            <label class="form-label small fw-bold text-muted text-uppercase">Correction Remarks</label>
-                            <textarea name="new_remark" class="form-control form-control-sm shadow-sm" rows="3" placeholder="Describe why this correction is being made..." required></textarea>
-                        </div>
+                    </div>
+                    
+                    <div class="mt-4 p-2 bg-light text-center border">
+                        <small class="text-muted italic" style="font-size: 0.65rem;">
+                            <i class="fa-solid fa-circle-info me-1"></i> Changes will be logged automatically by <strong><?= $_SESSION['username'] ?></strong>
+                        </small>
                     </div>
                 </div>
-                <div class="modal-footer bg-light border-0">
-                    <button type="button" class="btn btn-sm btn-secondary fw-bold px-3" data-bs-dismiss="modal">CANCEL</button>
-                    <button type="submit" class="btn btn-sm btn-dark fw-bold px-4 shadow-sm">SAVE CORRECTION</button>
+
+                <div class="modal-footer border-top p-3">
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-0 fw-bold px-3 shadow-none" data-bs-dismiss="modal">CANCEL</button>
+                    <button type="submit" class="btn btn-sm btn-dark rounded-0 fw-bold px-4 shadow-none">APPLY CHANGES</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 <!-- edit assets modal end -->
+
+
+<!-- reallocate modal start -->
+<div class="modal fade" id="reallocateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-0">
+            <div class="modal-header py-3 border-bottom">
+                <h6 class="modal-title text-uppercase fw-bold text-dark">
+                    <i class="fa-solid fa-arrows-rotate me-2"></i> Asset Re-allocation
+                </h6>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <form action="../src/php_script/process_reallocation.php" method="POST">
+                <div class="modal-body p-4">
+                    <div class="bg-light p-3 rounded-0 mb-4 border-start border-4 border-dark">
+                        <small class="text-muted d-block fw-bold mb-1" style="font-size: 0.6rem; letter-spacing: 1px;">TARGET ASSET</small>
+                        <h5 class="mb-0 fw-bold text-dark" id="display-asset-id">---</h5>
+                        <div class="d-flex gap-2 align-items-center">
+                            <span class="badge bg-dark rounded-0" id="display-current-loc" style="font-size: 0.6rem;">CURRENT LOCATION</span>
+                            <small class="text-muted fw-bold" style="font-size: 0.6rem;">Auth by: <span id="display-auth">---</span></small>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="asset_id" id="input-asset-id">
+                    <input type="hidden" name="old_location" id="input-old-location">
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-dark text-uppercase">New Destination / Assignee</label>
+                            <input type="text" name="new_assignee" class="form-control form-control-sm rounded-0 border-dark shadow-none" placeholder="ENTER NEW LOCATION..." required>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Notes / Reason for Transfer</label>
+                            <textarea name="remarks" class="form-control form-control-sm rounded-0 border-dark shadow-none" rows="2" placeholder="OPTIONAL..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 p-2 bg-light text-center border">
+                        <small class="text-muted italic" style="font-size: 0.65rem;">
+                            <i class="fa-solid fa-circle-info me-1"></i> This movement will be logged under <strong><?= $_SESSION['username'] ?></strong>
+                        </small>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top p-3">
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-0 fw-bold px-3 shadow-none" data-bs-dismiss="modal">CANCEL</button>
+                    <button type="submit" class="btn btn-sm btn-dark rounded-0 fw-bold px-4 shadow-none">CONFIRM TRANSFER</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- reallocate modal start -->
+
+
+<!-- resolve modal start -->
+<div class="modal fade" id="resolveModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form action="../src/php_script/resolve_damage.php" method="POST">
+                <div class="modal-header py-2 px-3 bg-dark text-white">
+                    <h5 class="modal-title" style="font-size: 0.75rem; font-weight: 800; letter-spacing: 1px;">RESOLVE ASSET ISSUE</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="modal_asset_id_hidden">
+                    <p class="mb-3" style="font-size: 0.75rem;">Updating status for: <strong id="modal_asset_display"></strong></p>
+                    
+                    <label class="detail-label">Update Condition To:</label>
+                    <select name="new_status" class="form-select form-select-sm fw-bold border-2">
+                        <option value="GOOD">GOOD (Fixed / Returned to Stock)</option>
+                        <option value="REPAIR">REPAIR (Still in maintenance)</option>
+                        <option value="DISPOSAL">DISPOSAL (Final Write-off)</option>
+                    </select>
+                    <div class="mt-2 text-muted" style="font-size: 0.6rem;">This action will be logged in the asset remarks.</div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light btn-sm fw-bold" data-bs-dismiss="modal">CANCEL</button>
+                    <button type="submit" name="resolve_asset" class="btn btn-dark btn-sm fw-bold px-4">UPDATE STATUS</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- resolve modal end -->

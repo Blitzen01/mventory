@@ -7,20 +7,19 @@
     include "../render/modals.php";
 
     // --- LOGIC: SEARCH & FILTERS ---
-    $search = isset($_GET['search']) ? mysqli_real_escape_string($conn, $_GET['search']) : '';
-    $cat_filter = isset($_GET['category']) ? mysqli_real_escape_string($conn, $_GET['category']) : '';
-    
+    $search = (isset($_GET['search']) && !is_array($_GET['search'])) ? mysqli_real_escape_string($conn, $_GET['search']) : '';
+    $cat_filter = (isset($_GET['category']) && !is_array($_GET['category'])) ? mysqli_real_escape_string($conn, $_GET['category']) : '';
+
     $where = ["1=1"];
-    if($search) $where[] = "(a.asset_id LIKE '%$search%' OR a.item_name LIKE '%$search%' OR a.serial_number LIKE '%$search%')";
-    if($cat_filter) $where[] = "c.category_name = '$cat_filter'";
+    if($search !== '') $where[] = "(a.asset_id LIKE '%$search%' OR a.item_name LIKE '%$search%' OR a.serial_number LIKE '%$search%')";
+    if($cat_filter !== '') $where[] = "c.category_name = '$cat_filter'";
     $where_sql = implode(" AND ", $where);
 
     // --- LOGIC: PAGINATION & LIMIT ---
-    $limit = isset($_GET['limit']) ? $_GET['limit'] : 10; 
-    $db_limit = ($limit == 'all') ? 9999 : (int)$limit;
+    $limit = isset($_GET['limit']) ? (string)$_GET['limit'] : '10'; 
+    $db_limit = ($limit === 'all') ? 9999 : (int)$limit;
 
-    // FIX: If limit is 'all', always force page to 1 to avoid offset errors
-    $page = (isset($_GET['page']) && $limit !== 'all') ? (int)$_GET['page'] : 1;
+    $page = (isset($_GET['page']) && $limit !== 'all') ? max(1, (int)$_GET['page']) : 1;
     $start = ($page - 1) * $db_limit;
 
     // Get Total Rows
@@ -30,6 +29,21 @@
     // FIX: Prevent division by zero and ensure at least 1 page exists
     $total_pages = ($db_limit > 0) ? ceil($total_rows / $db_limit) : 1;
     if($total_pages < 1) $total_pages = 1; 
+
+    $allowed_sort = [
+        'asset_id' => 'a.asset_id',
+        'item_name' => 'a.item_name',
+        'category' => 'c.category_name',
+        'status' => 'a.status',
+        'condition' => 'a.condition_status',
+        'assigned' => 'a.assigned_to'
+    ];
+
+    $sort = $_GET['sort'] ?? 'asset_id';
+    $dir  = $_GET['dir'] ?? 'DESC';
+
+    $sort_col = $allowed_sort[$sort] ?? 'a.asset_id';
+    $sort_dir = ($dir === 'ASC') ? 'ASC' : 'DESC';
 ?>
 
 <!doctype html>
@@ -38,6 +52,7 @@
         <meta charset="utf-8">
         <title>Registry | Professional Compact</title>
         <link rel="stylesheet" href="../src/style/main_style.css">
+
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
@@ -75,6 +90,14 @@
 
             .collapsing {
                 transition: height 0.15s ease-out !important;
+            }
+            /* Target the remarks and specs boxes */
+            .col-md-3 div[style*="overflow-y: auto"]::-webkit-scrollbar {
+                width: 4px;
+            }
+            .col-md-3 div[style*="overflow-y: auto"]::-webkit-scrollbar-thumb {
+                background: #ccc;
+                border-radius: 10px;
             }
         </style>
     </head>
@@ -140,27 +163,101 @@
                                     <thead>
                                         <tr>
                                             <th width="30"></th>
-                                            <th width="120">Asset ID</th>
-                                            <th>Item Details</th>
-                                            <th>Category</th>
-                                            <th class="text-center">Assigned To</th>
-                                            <th class="text-center">Condition</th>
-                                            <th class="text-center">Status</th>
+
+                                            <th width="120">
+                                                <a href="?<?= http_build_query(array_merge($_GET, ['sort'=>'asset_id','dir'=>($sort=='asset_id' && $sort_dir=='ASC')?'DESC':'ASC'])) ?>"
+                                                class="text-decoration-none text-dark">
+                                                    Asset ID <i class="fa-solid fa-sort ms-1"></i>
+                                                </a>
+                                            </th>
+
+                                            <th>
+                                                <a href="?<?= http_build_query(array_merge($_GET, ['sort'=>'item_name','dir'=>($sort=='item_name' && $sort_dir=='ASC')?'DESC':'ASC'])) ?>"
+                                                class="text-decoration-none text-dark">
+                                                    Item Details <i class="fa-solid fa-sort ms-1"></i>
+                                                </a>
+                                            </th>
+
+                                            <th>
+                                                <a href="?<?= http_build_query(array_merge($_GET, ['sort'=>'category','dir'=>($sort=='category' && $sort_dir=='ASC')?'DESC':'ASC'])) ?>"
+                                                class="text-decoration-none text-dark">
+                                                    Category <i class="fa-solid fa-sort ms-1"></i>
+                                                </a>
+                                            </th>
+
+                                            <th class="text-center">
+                                                <a href="?<?= http_build_query(array_merge($_GET, ['sort'=>'assigned','dir'=>($sort=='assigned' && $sort_dir=='ASC')?'DESC':'ASC'])) ?>"
+                                                class="text-decoration-none text-dark">
+                                                    Assigned To <i class="fa-solid fa-sort ms-1"></i>
+                                                </a>
+                                            </th>
+
+                                            <th class="text-center">
+                                                <a href="?<?= http_build_query(array_merge($_GET, ['sort'=>'condition','dir'=>($sort=='condition' && $sort_dir=='ASC')?'DESC':'ASC'])) ?>"
+                                                class="text-decoration-none text-dark">
+                                                    Condition <i class="fa-solid fa-sort ms-1"></i>
+                                                </a>
+                                            </th>
+
+                                            <th class="text-center">
+                                                <a href="?<?= http_build_query(array_merge($_GET, ['sort'=>'status','dir'=>($sort=='status' && $sort_dir=='ASC')?'DESC':'ASC'])) ?>"
+                                                class="text-decoration-none text-dark">
+                                                    Status <i class="fa-solid fa-sort ms-1"></i>
+                                                </a>
+                                            </th>
+
                                             <th width="150" class="text-center pe-4">Actions</th>
                                         </tr>
-                                    </thead>
+                                        </thead>
+
                                     <tbody>
                                         <?php
                                         $query = "SELECT a.*, c.category_name FROM assets a 
-                                                  LEFT JOIN categories c ON a.category_id = c.category_id 
-                                                  WHERE $where_sql ORDER BY a.asset_id DESC LIMIT $start, $db_limit";
+                                                    LEFT JOIN categories c ON a.category_id = c.category_id 
+                                                    WHERE $where_sql 
+                                                    ORDER BY $sort_col $sort_dir 
+                                                    LIMIT $start, $db_limit";
                                         $result = mysqli_query($conn, $query);
 
                                         if (mysqli_num_rows($result) > 0):
                                             while ($row = mysqli_fetch_assoc($result)):
                                                 $drawer_id = "row_detail_" . $row['id'];
-                                                $cond = strtoupper($row['condition_status'] ?? 'N/A');
-                                                $cond_class = ($cond == 'NEW') ? 'text-success' : (($cond == 'USED') ? 'text-warning' : 'text-info');
+
+                                                // Normalize strings
+                                                $status = strtoupper(trim($row['status'] ?? ''));
+                                                $cond   = strtoupper(trim($row['condition_status'] ?? 'N/A'));
+
+                                                // CONDITION COLOR LOGIC
+                                                if ($cond == 'NEW') {
+                                                    $cond_class = 'text-success';
+                                                } elseif ($cond == 'USED') {
+                                                    $cond_class = 'text-warning';
+                                                } elseif (preg_match('/(DEFECTIVE|DISPOSAL|REPLACEMENT)/', $cond)) {
+                                                    $cond_class = 'text-danger';
+                                                } elseif (preg_match('/(REPAIR|WARRANTY)/', $cond)) {
+                                                    $cond_class = 'text-primary';
+                                                } else {
+                                                    $cond_class = 'text-secondary';
+                                                }
+
+                                                // DISABLE LOGIC
+                                                $isDeployed = ($status === 'DEPLOYED');
+                                                $isAlreadyReported = preg_match('/(DEFECTIVE|REPAIR|WARRANTY|REPLACEMENT|DISPOSAL)/', $cond);
+
+                                                // ===== FIXED REMARKS =====
+                                                $remark_text  = $row['remarks'] ?? 'No remarks';
+                                                $remark_lower = strtolower($remark_text);
+
+                                                $remark_color  = '#343a40';
+                                                $remark_border = '#dee2e6';
+
+                                                if (preg_match('/damage|damaged|broken|defective|crack/', $remark_lower)) {
+                                                    $remark_color  = '#842029'; // red
+                                                    $remark_border = '#f1aeb5';
+                                                } elseif (preg_match('/repair|maintenance|issue|problem/', $remark_lower)) {
+                                                    $remark_color  = '#664d03'; // amber
+                                                    $remark_border = '#ffecb5';
+                                                }
                                         ?>
                                         <tr class="log-row">
                                             <td class="text-center">
@@ -181,48 +278,38 @@
                                                 <?= strtoupper($row['status']) ?>
                                             </td>
                                             <td class="text-center pe-4">
-                                                    <div class="d-flex justify-content-end gap-1" onclick="event.stopPropagation();">
-                                                        
-                                                        <button type="button" class="btn btn-sm btn-light border-0" 
-                                                                onclick="saveAsPng('<?= $row['asset_id'] ?>')" title="Barcode">
-                                                            <i class="fa-solid fa-barcode"></i>
-                                                        </button>
+                                                <div class="d-flex justify-content-end gap-1" onclick="event.stopPropagation();">
+                                                    
+                                                    <button type="button" class="btn btn-sm btn-light border-0" onclick="saveAsPng('<?= $row['asset_id'] ?>')" title="Barcode">
+                                                        <i class="fa-solid fa-barcode"></i>
+                                                    </button>
 
-                                                        <button type="button" 
-                                                                class="btn btn-sm btn-light btn-outline-dark border-0 text-muted" 
-                                                                data-bs-toggle="modal" 
-                                                                data-bs-target="#editModal" 
-                                                                data-id="<?= $row['id'] ?>"
-                                                                data-assetid="<?= $row['asset_id'] ?>"
-                                                                data-itemname="<?= htmlspecialchars($row['item_name']) ?>"
-                                                                data-brand="<?= htmlspecialchars($row['brand']) ?>"
-                                                                data-category="<?= $row['category_id'] ?>" 
-                                                                data-condition="<?= $row['condition_status'] ?>"
-                                                                title="Edit">
-                                                            <i class="fa-solid fa-pen-to-square"></i>
-                                                        </button>
+                                                    <button type="button" class="btn btn-sm btn-light btn-outline-dark border-0 text-muted" data-bs-toggle="modal" data-bs-target="#editModal" data-id="<?= $row['id'] ?>" data-assetid="<?= $row['asset_id'] ?>" data-itemname="<?= htmlspecialchars($row['item_name']) ?>" data-brand="<?= htmlspecialchars($row['brand']) ?>" data-category="<?= $row['category_id'] ?>" data-condition="<?= $row['condition_status'] ?>" title="Edit">
+                                                        <i class="fa-solid fa-pen-to-square"></i>
+                                                    </button>
 
-                                                        <button type="button" 
-                                                                class="btn btn-sm btn-light btn-outline-dark border-0 shadow-none" 
-                                                                data-bs-toggle="modal" 
-                                                                data-bs-target="#allocateModal" 
-                                                                data-id="<?= $rid ?>" 
-                                                                data-assetid="<?= $row['asset_id'] ?>"
-                                                                data-itemname="<?= htmlspecialchars($row['item_name']) ?>"
-                                                                data-currentholder="<?= htmlspecialchars($row['assigned_to']) ?>" 
-                                                                title="Allocate">
-                                                            <i class="fa-solid fa-user-tag"></i>
-                                                        </button>
+                                                    <button type="button" 
+                                                        class="btn btn-sm <?= $isDeployed ? 'btn-outline-secondary' : 'btn-light btn-outline-dark' ?> border-0 shadow-none" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="<?= $isDeployed ? '' : '#allocateModal' ?>" 
+                                                        data-id="<?= $row['id'] ?>" 
+                                                        data-assetid="<?= htmlspecialchars($row['asset_id']) ?>" 
+                                                        title="<?= $isDeployed ? 'Already Deployed' : 'Allocate' ?>" 
+                                                        <?= $isDeployed ? 'disabled' : '' ?>>
+                                                        <i class="fa-solid fa-user-tag <?= $isDeployed ? 'text-muted' : 'text-dark' ?>"></i>
+                                                    </button>
 
-                                                        <button type="button" class="btn btn-sm btn-light border-0 text-danger" 
-                                                                data-bs-toggle="modal" 
-                                                                data-bs-target="#damageModal" 
-                                                                data-assetid="<?= $row['asset_id'] ?>"
-                                                                data-id="<?= $row['id'] ?>" title="Report Damage">
-                                                            <i class="fa-solid fa-burst"></i>
-                                                        </button>
-                                                        
-                                                    </div>
+                                                    <button type="button" 
+                                                        class="btn btn-sm border-0 <?= $isAlreadyReported ? 'btn-outline-secondary' : 'btn-light text-danger' ?>" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="<?= $isAlreadyReported ? '' : '#damageModal' ?>" 
+                                                        data-assetid="<?= $row['asset_id'] ?>"
+                                                        data-id="<?= $row['id'] ?>" 
+                                                        title="<?= $isAlreadyReported ? 'Status already updated' : 'Report Damage' ?>"
+                                                        <?= $isAlreadyReported ? 'disabled' : '' ?>>
+                                                        <i class="fa-solid fa-burst <?= $isAlreadyReported ? 'text-muted' : '' ?>"></i>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
 
@@ -259,8 +346,29 @@
 
                                                             <div class="col-md-3">
                                                                 <label class="text-primary small fw-bold d-block mb-2 text-uppercase" style="font-size: 0.6rem;">Remarks & History</label>
-                                                                <div class="bg-white p-2 border-start border-primary border-3 rounded-end small text-dark" style="white-space: pre-line; font-size: 0.7rem; min-height: 60px;">
-                                                                    <?= !empty($row['remarks']) ? htmlspecialchars($row['remarks']) : 'No history logs found for this item.' ?>
+                                                                <div class="bg-white p-2 border-start border-primary border-3 rounded-end small text-dark" 
+                                                                    style="white-space: pre-line; font-size: 0.7rem; min-height: 60px; max-height: 150px; overflow-y: auto; line-height: 1.4;">
+                                                                    <?php 
+                                                                    if (!empty($row['remarks'])) {
+                                                                        $remarks = htmlspecialchars($row['remarks']);
+                                                                        
+                                                                        // 1. Bold the Date and Time inside brackets [ ... ]
+                                                                        $remarks = preg_replace('/\[(.*?)\]/', '<strong class="text-muted">[$1]</strong>', $remarks);
+                                                                        
+                                                                        // 2. Color the status keywords
+                                                                        $remarks = str_replace('DAMAGE:', '<span class="text-danger fw-bold">DAMAGE:</span>', $remarks);
+                                                                        $remarks = str_replace('RESOLVED:', '<span class="text-success fw-bold">RESOLVED:</span>', $remarks);
+                                                                        $remarks = str_replace('ALLOCATED:', '<span class="text-primary fw-bold">ALLOCATED:</span>', $remarks);
+                                                                        
+                                                                        // 3. Optional: Highlight the status change keywords (GOOD vs REPAIR)
+                                                                        $remarks = str_replace("'GOOD'", '<span class="text-success fw-bold">\'GOOD\'</span>', $remarks);
+                                                                        $remarks = str_replace("'REPAIR'", '<span class="text-warning fw-bold">\'REPAIR\'</span>', $remarks);
+
+                                                                        echo $remarks;
+                                                                    } else {
+                                                                        echo 'No history logs found for this item.';
+                                                                    }
+                                                                    ?>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -268,10 +376,11 @@
                                                 </div>
                                             </td>
                                         </tr>
+
                                         <?php endwhile; else: ?>
                                         <tr><td colspan="8" class="text-center py-5 text-muted small fw-bold">NO RECORDS FOUND</td></tr>
                                         <?php endif; ?>
-                                    </tbody>
+                                        </tbody>
                                 </table>
                             </div>
 
@@ -280,11 +389,31 @@
                                     <span class="text-muted fw-bold" style="font-size: 0.55rem; text-uppercase;">
                                         PAGE <?= $page ?> OF <?= max(1, $total_pages) ?> | TOTAL: <?= $total_rows ?> ASSETS
                                     </span>
+
                                     <div class="btn-group shadow-sm">
-                                        <a href="?page=<?= max(1, $page-1) ?>&search=<?= $search ?>&category=<?= $cat_filter ?>&limit=<?= $limit ?>" 
-                                           class="btn btn-outline-dark btn-sm fw-bold <?= ($page <= 1) ? 'disabled' : '' ?>" style="font-size: 0.65rem;">PREV</a>
-                                        <a href="?page=<?= min($total_pages, $page+1) ?>&search=<?= $search ?>&category=<?= $cat_filter ?>&limit=<?= $limit ?>" 
-                                           class="btn btn-outline-dark btn-sm fw-bold <?= ($page >= $total_pages) ? 'disabled' : '' ?>" style="font-size: 0.65rem;">NEXT</a>
+                                        <?php 
+                                            // This creates a safe URL string automatically
+                                            $base_params = [
+                                                'search'   => $search,
+                                                'category' => $cat_filter,
+                                                'limit'    => $limit
+                                            ];
+                                            
+                                            $prev_url = "?" . http_build_query(array_merge($base_params, ['page' => $page - 1]));
+                                            $next_url = "?" . http_build_query(array_merge($base_params, ['page' => $page + 1]));
+                                        ?>
+
+                                        <a href="<?= ($page > 1) ? $prev_url : '#' ?>" 
+                                        class="btn btn-outline-dark btn-sm fw-bold <?= ($page <= 1) ? 'disabled' : '' ?>" 
+                                        style="font-size: 0.65rem;">
+                                        PREV
+                                        </a>
+
+                                        <a href="<?= ($page < $total_pages && $limit !== 'all') ? $next_url : '#' ?>" 
+                                        class="btn btn-outline-dark btn-sm fw-bold <?= ($page >= $total_pages || $limit === 'all') ? 'disabled' : '' ?>" 
+                                        style="font-size: 0.65rem;">
+                                        NEXT
+                                        </a>
                                     </div>
                                 </div>
                             </div>

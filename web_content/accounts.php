@@ -42,6 +42,21 @@ $archived_result = $conn->query("SELECT * FROM deleted_users LIMIT $limit OFFSET
         <link rel="stylesheet" href="../src/style/main_style.css">
         <link rel="stylesheet" href="../src/style/accounts_style.css">
         <link rel="icon" type="image/png" href="../src/image/logo/varay_logo.png">
+
+        <style>
+            .btn-monochrome-outline {
+                background-color: transparent;
+                border: 1px solid #d1d1d1;
+                color: #333333;
+                font-weight: 500;
+            }
+
+            .btn-monochrome-outline:hover {
+                background-color: #f8f9fa;
+                border-color: #1a1a1a;
+                color: #000000;
+            }
+        </style>
     </head>
     <body>
         <div class="row">
@@ -56,7 +71,9 @@ $archived_result = $conn->query("SELECT * FROM deleted_users LIMIT $limit OFFSET
                                 <h3 class="fw-bold text-dark mb-0"><i class="fa-solid fa-users-gear me-2"></i>User Management</h3>
                                 <p class="text-muted small">Manage active users and archived records</p>
                             </div>
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal"><i class="fa-solid fa-user-plus"></i> New User</button>
+                            <button class="btn btn-monochrome-outline" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                                <i class="fa-solid fa-user-plus me-2"></i>New User
+                            </button>
                         </div>
 
                         <ul class="nav nav-tabs mb-0 bg-white px-3 rounded-top border-bottom-0 shadow-sm" id="userTabs" role="tablist">
@@ -404,35 +421,94 @@ $archived_result = $conn->query("SELECT * FROM deleted_users LIMIT $limit OFFSET
                         container.innerHTML = `${imageHtml}<div class="position-absolute bottom-0 end-0 bg-danger text-white rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border: 2px solid #fff;"><i class="fa-solid fa-box-archive" style="font-size: 0.8rem;"></i></div>`;
                     });
                 }
-            });document.addEventListener('DOMContentLoaded', function () {
-                const deleteModal = document.getElementById('deleteUserModal');
-                if (deleteModal) {
-                    deleteModal.addEventListener('show.bs.modal', function (event) {
-                        const btn = event.relatedTarget;
-                        
-                        // Text values
-                        document.getElementById('del_full_name').textContent = btn.getAttribute('data-fname') + ' ' + btn.getAttribute('data-lname');
-                        document.getElementById('del_username_display').textContent = '@' + btn.getAttribute('data-username');
-                        document.getElementById('del_user_id_text').textContent = '#' + btn.getAttribute('data-id');
-                        document.getElementById('del_user_id_input').value = btn.getAttribute('data-id');
-                        document.getElementById('del_email').textContent = btn.getAttribute('data-email');
-                        document.getElementById('del_role').textContent = btn.getAttribute('data-role');
-                        document.getElementById('del_status').textContent = btn.getAttribute('data-status');
-                        document.getElementById('del_phone').textContent = btn.getAttribute('data-phone') || 'N/A';
-                        document.getElementById('del_created_at').textContent = btn.getAttribute('data-created');
+            });
+            
+            // delete user modal (separate to avoid conflicts)
+            let timeout = null;
+            document.getElementById('admin_pwd_check').addEventListener('input', function () {
+                const pwd = this.value;
+                const feedback = document.getElementById('pwd_feedback');
+                const submitBtn = document.getElementById('btn_confirm_archive');
 
-                        // Image vs Initials logic
-                        const img = btn.getAttribute('data-img');
-                        const initials = btn.getAttribute('data-initials');
-                        const imgContainer = document.getElementById('del_profile_img_container');
-
-                        if (img && img !== '' && img !== 'None') {
-                            imgContainer.innerHTML = `<img src="${img}" class="rounded-circle shadow border border-3 border-white" style="width: 80px; height: 80px; object-fit: cover;">`;
-                        } else {
-                            imgContainer.innerHTML = `<div class="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center shadow border border-3 border-white fw-bold" style="width: 80px; height: 80px; font-size: 1.5rem;">${initials}</div>`;
-                        }
-                    });
+                clearTimeout(timeout);
+                
+                // Don't check if it's too short (most passwords are 8+ chars)
+                if (pwd.length < 4) { 
+                    feedback.textContent = ""; 
+                    submitBtn.disabled = true; 
+                    return; 
                 }
+
+                // Reduced delay from 500ms to 200ms
+                timeout = setTimeout(() => {
+                    feedback.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
+                    
+                    fetch('../render/password_checker.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'password=' + encodeURIComponent(pwd)
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            feedback.innerHTML = '<span class="text-success small"><i class="fa-solid fa-check"></i> Verified</span>';
+                            submitBtn.disabled = false;
+                        } else {
+                            feedback.innerHTML = '<span class="text-danger small"><i class="fa-solid fa-xmark"></i> Incorrect</span>';
+                            submitBtn.disabled = true;
+                        }
+                    })
+                    .catch(err => {
+                        feedback.innerHTML = '<span class="text-warning small">Error connecting...</span>';
+                    });
+                }, 200); // Faster response
+            });
+
+            // GENERATE USERNAME AND PASSWORD
+            document.addEventListener('DOMContentLoaded', function() {
+                const lastNameInput = document.getElementById('gen_last_name');
+                const usernameDisplay = document.getElementById('display_username');
+                const passwordDisplay = document.getElementById('display_password');
+
+                // 1. Function to generate Username (LastName + Random Number)
+                function updateUsername() {
+                    const lastName = lastNameInput.value.trim().toLowerCase().replace(/\s+/g, '');
+                    if (lastName) {
+                        const randomNumber = Math.floor(1000 + Math.random() * 9000); // Generates 4-digit number
+                        usernameDisplay.value = lastName + randomNumber;
+                    } else {
+                        usernameDisplay.value = "---";
+                    }
+                }
+
+                // 2. Function to generate Random Password
+                window.generateNewPassword = function() {
+                    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+                    let password = "";
+                    for (let i = 0; i < 10; i++) {
+                        password += chars.charAt(Math.floor(Math.random() * chars.length));
+                    }
+                    passwordDisplay.value = password;
+                };
+
+                // 3. Helper to copy to clipboard
+                window.copyToClipboard = function(elementId, btn) {
+                    const copyText = document.getElementById(elementId);
+                    if (copyText.value === "---") return;
+                    
+                    navigator.clipboard.writeText(copyText.value);
+                    
+                    // Brief UI feedback
+                    const icon = btn.querySelector('i');
+                    icon.classList.replace('fa-copy', 'fa-check');
+                    setTimeout(() => icon.classList.replace('fa-check', 'fa-copy'), 1500);
+                };
+
+                // Listen for typing in Last Name field
+                lastNameInput.addEventListener('input', updateUsername);
+
+                // Generate initial password when modal is opened or script loads
+                generateNewPassword();
             });
         </script>
     </body>

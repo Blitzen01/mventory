@@ -102,8 +102,7 @@
                 <span class="ms-3 link-text">Logs</span>
             </a>
             <ul class="dropdown-menu dropdown-menu-stark shadow-lg">
-                <li><a class="dropdown-item" href="branch_logs.php">Branch Logs</a></li>
-                <li><a class="dropdown-item" href="head_office_logs.php">Head Office Logs</a></li>
+                <li><a class="dropdown-item" href="update_logs.php">Update Logs</a></li>
                 <li><a class="dropdown-item" href="security_logs.php">Security Logs</a></li>
                 <li><a class="dropdown-item" href="system_logs.php">System Logs</a></li>
                 <li><hr class="text-light"></li>
