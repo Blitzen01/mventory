@@ -182,12 +182,12 @@
                                                 <td class="text-center">
                                                     <?php $isSuccess = (strtolower($log['status']) == 'success'); ?>
                                                     <span class="status-badge <?php echo $isSuccess ? 'status-success' : 'status-failed'; ?>">
-                                                        <?php echo $log['status']; ?>
+                                                        <?php echo $isSuccess ? 'LOG IN' : 'LOG OUT' ; ?>
                                                     </span>
                                                 </td>
                                                 <td class="pe-4 text-center">
-                                                    <span class="badge rounded-pill <?php echo $log['is_active'] ? 'bg-success' : 'bg-light text-muted border'; ?>" style="font-size: 0.6rem;">
-                                                        <?php echo $log['is_active'] ? 'Active' : 'Offline'; ?>
+                                                    <span class="badge rounded-pill <?php echo $log['is_active'] ? 'bg-light text-muted border' : 'bg-success'; ?>" style="font-size: 0.6rem;">
+                                                        <?php echo $log['is_active'] ? 'Deactivated' : 'Activated'; ?>
                                                     </span>
                                                 </td>
                                             </tr>

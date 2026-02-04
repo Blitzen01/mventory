@@ -1,41 +1,41 @@
 <?php
-    // This detects the current filename (e.g., dashboard.php)
-    $current_page = basename($_SERVER['PHP_SELF']);
+// This detects the current filename (e.g., dashboard.php)
+$current_page = basename($_SERVER['PHP_SELF']);
 
-    $app_name = "SELECT setting_value FROM system_settings WHERE setting_key = 'app_name'";
-    $result = $conn->query($app_name);
-    if ($result && $result->num_rows > 0) {
-        $row = $result->fetch_assoc();
-        $app_name_value = $row['setting_value'];
-    } else {
-        $app_name_value = "MVentory"; // Default value if not set in DB
-    }
+$app_name = "SELECT setting_value FROM system_settings WHERE setting_key = 'app_name'";
+$result = $conn->query($app_name);
+if ($result && $result->num_rows > 0) {
+    $row = $result->fetch_assoc();
+    $app_name_value = $row['setting_value'];
+} else {
+    $app_name_value = "MVentory"; // Default value if not set in DB
+}
 
-    $words = explode(" ", $app_name_value);
+$words = explode(" ", $app_name_value);
 
-    if (count($words) > 1) {
-        // Wrap the first word in text-info
-        $first_part = '<span class="text-info">' . htmlspecialchars($words[0]) . '</span>';
-        
-        // Remove the first word from the array
-        array_shift($words);
-        
-        // Join the remaining words with NO SPACE
-        $second_part = htmlspecialchars(implode("", $words)); 
-        
-        $display_name = $first_part . $second_part;
-    } else {
-        $display_name = htmlspecialchars($app_name_value);
-    }
+if (count($words) > 1) {
+    // Wrap the first word in text-info
+    $first_part = '<span class="text-info">' . htmlspecialchars($words[0]) . '</span>';
 
-    $app_logo = "SELECT setting_value FROM system_settings WHERE setting_key = 'app_logo'";
-    $result_logo = $conn->query($app_logo);
-    if ($result_logo && $result_logo->num_rows > 0) {
-        $row_logo = $result_logo->fetch_assoc();
-        $app_logo_value = $row_logo['setting_value'];
-    } else {
-        $app_logo_value = "default_logo.png"; // Default logo if not set in DB
-    }
+    // Remove the first word from the array
+    array_shift($words);
+
+    // Join the remaining words with NO SPACE
+    $second_part = htmlspecialchars(implode("", $words));
+
+    $display_name = $first_part . $second_part;
+} else {
+    $display_name = htmlspecialchars($app_name_value);
+}
+
+$app_logo = "SELECT setting_value FROM system_settings WHERE setting_key = 'app_logo'";
+$result_logo = $conn->query($app_logo);
+if ($result_logo && $result_logo->num_rows > 0) {
+    $row_logo = $result_logo->fetch_assoc();
+    $app_logo_value = $row_logo['setting_value'];
+} else {
+    $app_logo_value = "default_logo.png"; // Default logo if not set in DB
+}
 ?>
 
 <style>
@@ -52,6 +52,7 @@
 </style>
 
 <link rel="stylesheet" href="../src/style/navbar_style.css">
+
 
 <div class="sidebar-stark" id="sidebar">
 
@@ -105,7 +106,9 @@
                 <li><a class="dropdown-item" href="update_logs.php">Update Logs</a></li>
                 <li><a class="dropdown-item" href="security_logs.php">Security Logs</a></li>
                 <li><a class="dropdown-item" href="system_logs.php">System Logs</a></li>
-                <li><hr class="text-light"></li>
+                <li>
+                    <hr class="text-light">
+                </li>
                 <li><a class="dropdown-item" href="full_logs.php">Full System Logs</a></li>
             </ul>
         </li>
@@ -119,7 +122,9 @@
         <ul class="dropdown-menu dropdown-menu-stark w-100">
             <li><a class="dropdown-item" href="profile.php">Profile</a></li>
             <li><a class="dropdown-item" href="settings.php">Settings</a></li>
-            <li><hr class="dropdown-divider border-secondary"></li>
+            <li>
+                <hr class="dropdown-divider border-secondary">
+            </li>
             <li>
                 <a class="dropdown-item fw-bold logout-item" href="logout.php">
                     Sign Out

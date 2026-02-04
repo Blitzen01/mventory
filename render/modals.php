@@ -631,7 +631,7 @@ function applyPcTemplate() {
                                     $cat_list = mysqli_query($conn, "SELECT category_id, category_name FROM categories ORDER BY category_name ASC");
                                     while($c = mysqli_fetch_assoc($cat_list)): 
                                 ?>
-                                    <option value="<?= $c['category_id'] ?>"><?= strtoupper($c['category_name']) ?></option>
+                                    <option value="<?= $c['category_id'] ?> <?php $c['assigned_to'] ? 'NEW' : 'echo disabled' ?>"><?= strtoupper($c['category_name']) ?></option>
                                 <?php endwhile; ?>
                             </select>
                         </div>

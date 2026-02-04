@@ -74,6 +74,45 @@
         <title>Dashboard | Stock Focus</title>
         <link rel="stylesheet" href="../src/style/main_style.css">
         <link rel="icon" type="image/png" href="../src/image/logo/varay_logo.png">
+
+        <style>
+            /* This makes the search suggestions float over the other form fields */
+            #search-results {
+                position: absolute;
+                top: 100%; 
+                left: 0;
+                right: 0;
+                z-index: 2000; 
+                background: white;
+                border: 1px solid #333;
+                border-top: none;
+                max-height: 200px;
+                overflow-y: auto;
+                
+                /* --- THE FIX --- */
+                display: none; /* Use display none by default */
+                pointer-events: none; 
+            }
+
+            /* When the d-none class is removed by JS, make it clickable again */
+            #search-results:not(.d-none) {
+                display: block;
+                pointer-events: auto;
+            }
+
+            /* Stark/Dashboard Style for the items */
+            #search-results .list-group-item {
+                cursor: pointer;
+                border-radius: 0;
+                border-left: none;
+                border-right: none;
+            }
+
+            #search-results .list-group-item:hover {
+                background-color: #f8f9fa;
+                color: #dc3545; 
+            }
+        </style>
     </head>
     <body>
         <div class="row m-0">
@@ -305,13 +344,6 @@
                                     <div class="text-start">
                                         <div class="fw-bold small">Add Account</div>
                                         <div class="text-muted small" style="font-size: 11px;">Register new team member</div>
-                                    </div>
-                                </button>
-                                <button class="btn-action-stark shadow-sm border-danger w-100">
-                                    <i class="fa-solid fa-circle-exclamation text-danger fa-xl me-3"></i>
-                                    <div class="text-start">
-                                        <div class="fw-bold text-danger small">Report Damage</div>
-                                        <div class="text-muted small" style="font-size: 11px;">Log broken or expired items</div>
                                     </div>
                                 </button>
                             </div>

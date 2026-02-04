@@ -67,7 +67,7 @@ $total_pages = ceil($total_rows / $limit);
     <title>Damage Management</title>
     <link rel="stylesheet" href="../src/style/main_style.css">
     <link rel="stylesheet" href="../src/style/custom_styles.css">
-    <link rel="icon" type="image/png" href="../src/assets/mventory_favicon.png">
+    <link rel="icon" href="../src/image/logo/varay_logo.png" type="image/png">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
     <style>

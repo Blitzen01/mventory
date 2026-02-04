@@ -19,10 +19,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     if ($row = mysqli_fetch_assoc($query)) {
         // Optional: Check if already allocated to prevent double-allocation
-        if ($row['status'] === 'Deployed') {
-             header("Location: ../../web_content/inventory.php?status=error&message=Already_Allocated");
-             exit();
-        }
+        // if ($row['status'] === 'Deployed') {
+        //      header("Location: ../../web_content/inventory.php?status=error&message=Already_Allocated");
+        //      exit();
+        // }
 
         $old_holder  = $row['assigned_to'] ?? 'Unassigned';
         $old_remarks = $row['remarks'] ?? '';

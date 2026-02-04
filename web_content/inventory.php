@@ -52,6 +52,7 @@
         <meta charset="utf-8">
         <title>Registry | Professional Compact</title>
         <link rel="stylesheet" href="../src/style/main_style.css">
+        <link rel="icon" type="image/png" href="../src/image/logo/varay_logo.png">
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -98,6 +99,15 @@
             .col-md-3 div[style*="overflow-y: auto"]::-webkit-scrollbar-thumb {
                 background: #ccc;
                 border-radius: 10px;
+            }
+            .btn-expand {
+                display: inline-block;
+                transition: transform 0.25s ease, color 0.25s ease;
+            }
+
+            .btn-expand:not(.collapsed) {
+                transform: rotate(90deg);
+                color: #212529;
             }
         </style>
     </head>
@@ -261,7 +271,10 @@
                                         ?>
                                         <tr class="log-row">
                                             <td class="text-center">
-                                                <i class="fa-solid fa-angle-right btn-expand" data-bs-toggle="collapse" data-bs-target="#<?= $drawer_id ?>" role="button"></i>
+                                                <i class="fa-solid fa-angle-right btn-expand collapsed"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="#<?= $drawer_id ?>"
+                                                role="button"></i>
                                             </td>
                                             <td class="fw-bold asset-id-cell text-dark"><?= $row['asset_id'] ?></td>
                                             <td>
@@ -289,25 +302,23 @@
                                                     </button>
 
                                                     <button type="button" 
-                                                        class="btn btn-sm <?= $isDeployed ? 'btn-outline-secondary' : 'btn-light btn-outline-dark' ?> border-0 shadow-none" 
+                                                        class="btn btn-sm btn-outline-dark border-0 shadow-none"
                                                         data-bs-toggle="modal" 
-                                                        data-bs-target="<?= $isDeployed ? '' : '#allocateModal' ?>" 
+                                                        data-bs-target="#allocateModal"
                                                         data-id="<?= $row['id'] ?>" 
                                                         data-assetid="<?= htmlspecialchars($row['asset_id']) ?>" 
-                                                        title="<?= $isDeployed ? 'Already Deployed' : 'Allocate' ?>" 
-                                                        <?= $isDeployed ? 'disabled' : '' ?>>
-                                                        <i class="fa-solid fa-user-tag <?= $isDeployed ? 'text-muted' : 'text-dark' ?>"></i>
+                                                        title="Allocate">
+                                                        <i class="fa-solid fa-user-tag text-dark"></i>
                                                     </button>
 
                                                     <button type="button" 
-                                                        class="btn btn-sm border-0 <?= $isAlreadyReported ? 'btn-outline-secondary' : 'btn-light text-danger' ?>" 
+                                                        class="btn btn-sm border-0 btn-light text-danger"
                                                         data-bs-toggle="modal" 
-                                                        data-bs-target="<?= $isAlreadyReported ? '' : '#damageModal' ?>" 
+                                                        data-bs-target="#damageModal"
                                                         data-assetid="<?= $row['asset_id'] ?>"
                                                         data-id="<?= $row['id'] ?>" 
-                                                        title="<?= $isAlreadyReported ? 'Status already updated' : 'Report Damage' ?>"
-                                                        <?= $isAlreadyReported ? 'disabled' : '' ?>>
-                                                        <i class="fa-solid fa-burst <?= $isAlreadyReported ? 'text-muted' : '' ?>"></i>
+                                                        title="Report Damage">
+                                                        <i class="fa-solid fa-burst"></i>
                                                     </button>
                                                 </div>
                                             </td>
@@ -463,6 +474,7 @@
                 finally { btn.disabled = false; btn.innerHTML = oldText; }
             }
 
+            // edit modal script
             document.addEventListener('DOMContentLoaded', function() {
                 const editModal = document.getElementById('editModal');
                 if (editModal) {
@@ -494,6 +506,7 @@
                 }
             });
 
+            // allocate modal script
             document.addEventListener('DOMContentLoaded', function() {
                 const allocateModal = document.getElementById('allocateModal');
                 if (allocateModal) {
@@ -518,6 +531,7 @@
                 }
             });
 
+            // damage modal script
             document.addEventListener('DOMContentLoaded', function() {
                 const damageModal = document.getElementById('damageModal');
                 if (damageModal) {
