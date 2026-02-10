@@ -478,6 +478,7 @@ function applyPcTemplate() {
             </div>
             
             <form action="../src/php_script/process_allocate.php" method="POST">
+
                 <div class="modal-body p-4">
                     <div class="mb-4">
                         <small class="text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Currently Modifying:</small>
@@ -631,14 +632,17 @@ function applyPcTemplate() {
                                     $cat_list = mysqli_query($conn, "SELECT category_id, category_name FROM categories ORDER BY category_name ASC");
                                     while($c = mysqli_fetch_assoc($cat_list)): 
                                 ?>
-                                    <option value="<?= $c['category_id'] ?> <?php $c['assigned_to'] ? 'NEW' : 'echo disabled' ?>"><?= strtoupper($c['category_name']) ?></option>
+                                    <option value="<?= $c['category_id'] ?>">
+                                        <?= strtoupper($c['category_name']) ?>
+                                    </option>
                                 <?php endwhile; ?>
                             </select>
                         </div>
 
                         <div class="col-md-12">
                             <label class="form-label small fw-bold text-muted text-uppercase">Current Condition</label>
-                            <select name="condition_status" id="edit-condition" class="form-select form-select-sm rounded-0 border-dark shadow-none">
+                            <select name="condition_status" id="edit-condition" class="form-select form-select-sm rounded-0 border-dark shadow-none" required>
+                                <option value="" disabled selected>-- Select --</option>
                                 <option value="New">NEW</option>
                                 <option value="Used">USED</option>
                                 <option value="Repaired">REPAIRED</option>
@@ -750,3 +754,137 @@ function applyPcTemplate() {
     </div>
 </div>
 <!-- resolve modal end -->
+
+
+
+<div class="modal fade" id="wipeAccountModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form action="../src/php_script/wipe_account.php" method="POST">
+                <div class="modal-body text-center p-4">
+                    <i class="fa-solid fa-triangle-exclamation text-danger mb-3" style="font-size: 3rem;"></i>
+                    <h5 class="modal-title mb-2">Permanent Deletion</h5>
+                    <p class="text-muted">Are you sure you want to wipe <strong id="wipeUserName"></strong>? This action cannot be undone.</p>
+                    
+                    <input type="hidden" name="user_id" id="wipeUserId">
+                </div>
+                <div class="modal-footer border-0 justify-content-center">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" name="confirm_wipe" class="btn btn-danger">Wipe Permanently</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

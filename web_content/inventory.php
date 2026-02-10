@@ -286,7 +286,7 @@
                                                 <?= !empty($row['assigned_to']) ? strtoupper(htmlspecialchars($row['assigned_to'])) : '<span class="text-muted fw-normal">—</span>' ?>
                                             </td>
                                             <td class="text-center fw-bold <?= $cond_class ?>" style="font-size: 0.65rem;"><?= $cond ?></td>
-                                            <td class="text-center small fw-bold">
+                                            <td class="text-center small fw-bold text-nowrap">
                                                 <i class="fa-solid fa-circle me-1" style="font-size: 0.35rem; color: <?= ($row['status'] == 'In Stock') ? '#28a745' : '#17a2b8' ?>;"></i> 
                                                 <?= strtoupper($row['status']) ?>
                                             </td>

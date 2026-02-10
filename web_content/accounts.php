@@ -258,7 +258,14 @@ $archived_result = $conn->query("SELECT * FROM deleted_users LIMIT $limit OFFSET
                                                                     data-name="<?= $arc['first_name'].' '.$arc['last_name'] ?>">
                                                                 <i class="fa-solid fa-rotate-left"></i>
                                                             </button>
-                                                            <button class="btn btn-link text-danger py-1 border-start" title="Wipe"><i class="fa-solid fa-circle-xmark"></i></button>
+                                                            <button class="btn btn-link text-danger py-1 border-start" 
+                                                                    title="Wipe"
+                                                                    data-bs-toggle="modal" 
+                                                                    data-bs-target="#wipeAccountModal"
+                                                                    data-id="<?= $arc['user_id'] ?>"
+                                                                    data-name="<?= $arc['first_name'].' '.$arc['last_name'] ?>">
+                                                                <i class="fa-solid fa-circle-xmark"></i>
+                                                            </button>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -509,6 +516,17 @@ $archived_result = $conn->query("SELECT * FROM deleted_users LIMIT $limit OFFSET
 
                 // Generate initial password when modal is opened or script loads
                 generateNewPassword();
+            });
+
+            // Script to pass data to the modal
+            const wipeModal = document.getElementById('wipeAccountModal');
+            wipeModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const userId = button.getAttribute('data-id');
+                const userName = button.getAttribute('data-name');
+
+                wipeModal.querySelector('#wipeUserId').value = userId;
+                wipeModal.querySelector('#wipeUserName').textContent = userName;
             });
         </script>
     </body>

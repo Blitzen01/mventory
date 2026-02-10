@@ -18,12 +18,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $query = mysqli_query($conn, "SELECT assigned_to, remarks, status FROM assets WHERE id = '$db_id' LIMIT 1");
     
     if ($row = mysqli_fetch_assoc($query)) {
-        // Optional: Check if already allocated to prevent double-allocation
-        // if ($row['status'] === 'Deployed') {
-        //      header("Location: ../../web_content/inventory.php?status=error&message=Already_Allocated");
-        //      exit();
-        // }
-
         $old_holder  = $row['assigned_to'] ?? 'Unassigned';
         $old_remarks = $row['remarks'] ?? '';
         $currentDateTime = date('m/d/Y h:i A');
@@ -32,18 +26,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $combined_remarks = $remark_entry . PHP_EOL . $old_remarks;
         $escaped_remarks  = mysqli_real_escape_string($conn, $combined_remarks);
 
+        // --- Logic for Status Change ---
+        // If assigned to EDD, keep/set as In Stock, otherwise Deployed
+        $new_status = ($new_holder === 'EDD') ? 'In Stock' : 'Deployed';
+
         mysqli_begin_transaction($conn);
 
         try {
             /**
              * 1. UPDATE ASSETS TABLE 
-             * We update assigned_to, remarks, AND change status to 'Deployed'
-             * This effectively removes it from your "In Stock" filters.
+             * status is now determined by the $new_status variable
              */
             $update_asset = "UPDATE assets SET 
                              assigned_to = '$new_holder', 
                              remarks = '$escaped_remarks',
-                             status = 'Deployed' 
+                             status = '$new_status' 
                              WHERE id = '$db_id'";
             
             if (!mysqli_query($conn, $update_asset)) {
@@ -57,9 +54,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (!mysqli_query($conn, $insert_log)) {
                 throw new Exception("Failed to create allocation log.");
             }
-
             mysqli_commit($conn);
-            header("Location: ../../web_content/inventory.php?status=allocated");
+            $search   = $_POST['search'] ?? '';
+            $limit    = $_POST['limit'] ?? '10';
+            $category = $_POST['category'] ?? ''; // Only if applicable
+
+            // 2. Build the query string
+            $query_params = http_build_query([
+                'status'   => 'allocated',
+                'search'   => $search,
+                'limit'    => $limit,
+                'category' => $category
+            ]);
+
+            // 3. Redirect back with filters intact
+            header("Location: ../../web_content/inventory.php?$query_params");
             exit();
 
         } catch (Exception $e) {

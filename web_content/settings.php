@@ -32,8 +32,6 @@
     $min_pass         = $settings['password_min_length'] ?? "10";
     $last_backup      = $settings['last_backup_datetime'] ?? "Never Recorded";
     
-    // Boolean Switches (Checks if value is "1")
-    $dark_mode        = ($settings['dark_mode_default'] ?? "0") == "1" ? "checked" : "";
     $alert_stock      = ($settings['trigger_low_stock'] ?? "0") == "1" ? "checked" : "";
     $alert_reg        = ($settings['trigger_new_user'] ?? "0") == "1" ? "checked" : "";
 ?>
@@ -122,7 +120,7 @@
                                         <div class="tab-content p-4 p-md-5" id="settingsTabContent">
                                             
                                             <div class="tab-pane fade show active" id="general" role="tabpanel">
-                                                <form action="update_settings.php" method="POST" enctype="multipart/form-data">
+                                                <form action="../src/php_script/update_settings_script.php" method="POST" enctype="multipart/form-data">
                                                     <input type="hidden" name="scope" value="general">
                                                     <h5 class="section-title mb-4">Application Identity</h5>
                                                     <div class="mb-4">
@@ -149,19 +147,13 @@
                                                                 <option value="d/m/Y" <?php echo $date_format == 'd/m/Y' ? 'selected' : ''; ?>>UK (DD/MM/YYYY)</option>
                                                             </select>
                                                         </div>
-                                                        <div class="col-md-6 mt-4 pt-2">
-                                                            <div class="form-check form-switch">
-                                                                <input class="form-check-input" type="checkbox" name="dark_mode_default" <?php echo $dark_mode; ?>>
-                                                                <label class="form-check-label small fw-bold">DEFAULT DARK THEME</label>
-                                                            </div>
-                                                        </div>
                                                     </div>
                                                     <button type="submit" class="btn btn-black">Save General Changes</button>
                                                 </form>
                                             </div>
 
                                             <div class="tab-pane fade" id="inventory" role="tabpanel">
-                                                <form action="update_settings.php" method="POST">
+                                                <form action="../src/php_script/update_settings_script.php" method="POST">
                                                     <input type="hidden" name="scope" value="inventory">
                                                     <h5 class="section-title mb-4">Inventory Logic</h5>
                                                     <div class="row g-4 mb-4">
@@ -193,7 +185,7 @@
                                                     <div class="col-md-6">
                                                         <h5 class="section-title mb-4">Manage Categories</h5>
                                                         
-                                                        <form action="update_settings.php" method="POST" class="mb-3">
+                                                        <form action="../src/php_script/update_settings_script.php" method="POST">
                                                             <input type="hidden" name="scope" value="add_category">
                                                             <label class="form-label">Add New Category</label>
                                                             <div class="input-group">
@@ -202,7 +194,7 @@
                                                             </div>
                                                         </form>
 
-                                                        <form action="update_settings.php" method="POST">
+                                                        <form action="../src/php_script/update_settings_script.php" method="POST">
                                                             <input type="hidden" name="scope" value="remove_category">
                                                             <label class="form-label">Remove Existing Category</label>
                                                             <div class="input-group">
@@ -223,7 +215,7 @@
                                                     <div class="col-md-6">
                                                         <h5 class="section-title mb-4">Manage Item Masterlist</h5>
                                                         
-                                                        <form action="update_settings.php" method="POST" class="mb-3">
+                                                        <form action="../src/php_script/update_settings_script.php" method="POST">
                                                             <input type="hidden" name="scope" value="add_item_name">
                                                             <label class="form-label">Add New Item Name</label>
                                                             <div class="input-group">
@@ -232,7 +224,7 @@
                                                             </div>
                                                         </form>
 
-                                                        <form action="update_settings.php" method="POST">
+                                                        <form action="../src/php_script/update_settings_script.php" method="POST">
                                                             <input type="hidden" name="scope" value="remove_item_name">
                                                             <label class="form-label">Remove Item Name</label>
                                                             <div class="input-group">
@@ -253,7 +245,7 @@
                                             </div>
 
                                             <div class="tab-pane fade" id="alerts" role="tabpanel">
-                                                <form action="update_settings.php" method="POST">
+                                                <form action="../src/php_script/update_settings_script.php" method="POST">
                                                     <input type="hidden" name="scope" value="notifications">
                                                     <h5 class="section-title mb-4">Alert Configurations</h5>
                                                     <div class="list-group list-group-flush mb-4 border rounded-0">
@@ -281,7 +273,7 @@
                                             </div>
 
                                             <div class="tab-pane fade" id="security" role="tabpanel">
-                                                <form action="update_settings.php" method="POST">
+                                                <form action="../src/php_script/update_settings_script.php" method="POST">
                                                     <input type="hidden" name="scope" value="security">
                                                     <h5 class="section-title mb-4">Access & Audit</h5>
                                                     <div class="mb-4">
@@ -304,7 +296,7 @@
                                                 </div>
                                                 <div class="row g-3">
                                                     <div class="col-md-6">
-                                                        <form action="backup_handler.php" method="POST">
+                                                        <form action="../src/php_script/backup_handler.php" method="POST">
                                                             <button type="submit" name="export_csv" class="btn btn-outline-dark w-100 py-4 border-1 rounded-0">
                                                                 <i class="fa-solid fa-file-export fa-2x mb-2"></i><br>
                                                                 <strong class="small">EXPORT INVENTORY CSV</strong>
@@ -312,7 +304,7 @@
                                                         </form>
                                                     </div>
                                                     <div class="col-md-6">
-                                                        <form action="backup_handler.php" method="POST">
+                                                        <form action="../src/php_script/backup_handler.php" method="POST">
                                                             <button type="submit" name="download_sql" class="btn btn-outline-dark w-100 py-4 border-1 rounded-0">
                                                                 <i class="fa-solid fa-database fa-2x mb-2"></i><br>
                                                                 <strong class="small">DOWNLOAD SQL SNAPSHOT</strong>
@@ -331,5 +323,32 @@
                 </div>
             </div>
         </div>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                // Check if there is a hash in the URL (e.g., #alerts)
+                var hash = window.location.hash;
+                
+                if (hash) {
+                    // Find the button that controls this tab
+                    var tabTriggerEl = document.querySelector('button[data-bs-target="' + hash + '"]');
+                    
+                    if (tabTriggerEl) {
+                        // Use Bootstrap's Tab constructor to show it
+                        var tab = new bootstrap.Tab(tabTriggerEl);
+                        tab.show();
+                    }
+                }
+            });
+
+            // Optional: Update the URL hash when a user clicks a tab manually
+            // so that manual refreshes also stay on the same tab.
+            var tabEls = document.querySelectorAll('button[data-bs-toggle="pill"]');
+            tabEls.forEach(function(el) {
+                el.addEventListener('shown.bs.tab', function(event) {
+                    window.location.hash = event.target.getAttribute('data-bs-target');
+                });
+            });
+        </script>
     </body>
 </html>
