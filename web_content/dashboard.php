@@ -43,9 +43,11 @@
     $low_stock_res = $conn->query($low_stock_sql);
     $low_stock_count = $low_stock_res->fetch_assoc()['low_count'] ?? 0;
 
-    // 5. Damaged Items & Loss
-    $damaged_result = $conn->query("SELECT COUNT(*) as damaged, SUM(cost) as loss FROM assets WHERE condition_status IN ($damage_statuses)");
+    // 5. Damaged Items & Loss (Filtered by EDD stock)
+    $damaged_result = $conn->query("SELECT COUNT(*) as damaged, SUM(cost) as loss FROM assets WHERE condition_status IN ($damage_statuses) AND assigned_to = 'EDD'");
     $damage_data = $damaged_result->fetch_assoc();
+
+    // We define these clearly so the HTML below can find them
     $damaged_count = $damage_data['damaged'] ?? 0;
     $damage_loss = $damage_data['loss'] ?? 0;
 
@@ -203,7 +205,7 @@
                                 <div class="card metric-card-stark h-100 py-2 shadow-sm border-0 border-start border-danger border-4 rounded-0">
                                     <div class="card-body d-flex justify-content-between align-items-center">
                                         <div>
-                                            <div class="metric-label small text-uppercase fw-bold text-muted mb-1" style="letter-spacing: 1px;">Damaged Items</div>
+                                            <div class="metric-label small text-uppercase fw-bold text-muted mb-1" style="letter-spacing: 1px;">On-Hand Damage Loss</div>
                                             <div class="h4 m-0 fw-bold text-danger"><?php echo sprintf("%02d", $damaged_count); ?></div>
                                         </div>
                                         <i class="fa-solid fa-heart-crack fa-2x text-danger opacity-25"></i>

@@ -12,32 +12,6 @@ if (session_status() === PHP_SESSION_NONE) {
 include "../render/connection.php"; 
 date_default_timezone_set('Asia/Manila');
 
-// 3. PROCESS UPDATE
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['resolve_asset'])) {
-    $id = mysqli_real_escape_string($conn, $_POST['id']);
-    $new_status = mysqli_real_escape_string($conn, $_POST['new_status']);
-    $admin_user = $_SESSION['username'] ?? "System Admin";
-    $currentDateTime = date('m/d/Y h:i A');
-
-    $fetch_query = mysqli_query($conn, "SELECT condition_status, remarks FROM assets WHERE id = '$id' LIMIT 1");
-    $row = mysqli_fetch_assoc($fetch_query);
-    
-    $old_status = $row['condition_status'] ?? 'UNKNOWN';
-    $existing_logs = $row['remarks'] ?? '';
-    
-    $log_entry = "[$currentDateTime] RESOLVED: Changed from '$old_status' to '$new_status' by $admin_user.";
-    $combined_remarks = mysqli_real_escape_string($conn, $log_entry . PHP_EOL . $existing_logs);
-
-    $update_sql = "UPDATE assets SET 
-                   condition_status = '$new_status', 
-                   remarks = '$combined_remarks' 
-                   WHERE id = '$id'";
-    
-    if (mysqli_query($conn, $update_sql)) {
-        header("Location: " . $_SERVER['PHP_SELF'] . "?status=updated");
-        exit();
-    }
-}
 
 include "../src/cdn/cdn_links.php";
 include "../render/modals.php";

@@ -98,6 +98,7 @@ $archived_result = $conn->query("SELECT * FROM deleted_users LIMIT $limit OFFSET
                                                 <tr>
                                                     <th class="ps-4 text-muted small">USER DETAILS</th>
                                                     <th class="text-muted small">ID</th>
+                                                    <th class="text-muted small">USERNAME</th>
                                                     <th class="text-muted small">ROLE</th>
                                                     <th class="text-muted small text-center">ACCOUNT STATUS</th>
                                                     <th class="text-muted small text-center">LOGIN STATUS</th>
@@ -123,6 +124,7 @@ $archived_result = $conn->query("SELECT * FROM deleted_users LIMIT $limit OFFSET
                                                         </div>
                                                     </td>
                                                     <td><span class="text-muted font-monospace small">#<?= $row['user_id'] ?></span></td>
+                                                    <td><span class="badge border text-dark fw-normal text-uppercase" style="font-size: 0.65rem;"><?= $row['username'] ?></span></td>
                                                     <td><span class="badge border text-dark fw-normal text-uppercase" style="font-size: 0.65rem;"><?= $row['role'] ?></span></td>
                                                     <td class="text-center">
                                                         <span class="fw-bold <?= ($row['status'] == 'ACTIVE') ? 'text-dark' : 'text-muted' ?>" style="font-size: 0.65rem; letter-spacing: 1px;">
