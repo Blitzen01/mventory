@@ -9,7 +9,6 @@
 
     include "../render/connection.php";
     include "../src/cdn/cdn_links.php";
-    include "../render/modals.php";
 
     /* ---------------- PAGINATION ---------------- */
     $limit = 25;
@@ -78,6 +77,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Unified System Logs | Varay Inventory</title>
         <link rel="stylesheet" href="../src/style/main_style.css">
+        <link rel="shortcut icon" type="image/png" href="../src/image/logo/varay_logo.png">
+        <?php include "../render/modals.php";?>
         <style>
             body { background-color: #f8f9fa; }
             .edd-card { border: none; border-radius: 8px; overflow: hidden; background: #fff; }

@@ -4,552 +4,389 @@
     }
     include "../render/connection.php";
     include "../src/cdn/cdn_links.php";
-    include "../render/modals.php";
-
-    // --- LOGIC: SEARCH & FILTERS ---
-    $search = (isset($_GET['search']) && !is_array($_GET['search'])) ? mysqli_real_escape_string($conn, $_GET['search']) : '';
-    $cat_filter = (isset($_GET['category']) && !is_array($_GET['category'])) ? mysqli_real_escape_string($conn, $_GET['category']) : '';
-
-    $where = ["1=1"];
-    if($search !== '') $where[] = "(a.asset_id LIKE '%$search%' OR a.item_name LIKE '%$search%' OR a.serial_number LIKE '%$search%')";
-    if($cat_filter !== '') $where[] = "c.category_name = '$cat_filter'";
-    $where_sql = implode(" AND ", $where);
-
-    // --- LOGIC: PAGINATION & LIMIT ---
-    $limit = isset($_GET['limit']) ? (string)$_GET['limit'] : '10'; 
-    $db_limit = ($limit === 'all') ? 9999 : (int)$limit;
-
-    $page = (isset($_GET['page']) && $limit !== 'all') ? max(1, (int)$_GET['page']) : 1;
-    $start = ($page - 1) * $db_limit;
-
-    // Get Total Rows
-    $total_res = mysqli_query($conn, "SELECT COUNT(*) as total FROM assets a LEFT JOIN categories c ON a.category_id = c.category_id WHERE $where_sql");
-    $total_rows = mysqli_fetch_assoc($total_res)['total'] ?? 0;
-    
-    // FIX: Prevent division by zero and ensure at least 1 page exists
-    $total_pages = ($db_limit > 0) ? ceil($total_rows / $db_limit) : 1;
-    if($total_pages < 1) $total_pages = 1; 
-
-    $allowed_sort = [
-        'asset_id' => 'a.asset_id',
-        'item_name' => 'a.item_name',
-        'category' => 'c.category_name',
-        'status' => 'a.status',
-        'condition' => 'a.condition_status',
-        'assigned' => 'a.assigned_to'
-    ];
-
-    $sort = $_GET['sort'] ?? 'asset_id';
-    $dir  = $_GET['dir'] ?? 'DESC';
-
-    $sort_col = $allowed_sort[$sort] ?? 'a.asset_id';
-    $sort_dir = ($dir === 'ASC') ? 'ASC' : 'DESC';
+    include "../render/app_name.php";
 ?>
 
 <!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <title>Registry | Professional Compact</title>
-        <link rel="stylesheet" href="../src/style/main_style.css">
-        <link rel="icon" type="image/png" href="../src/image/logo/varay_logo.png">
+<head>
+    <meta charset="utf-8">
+    <title><?php echo $display_name; ?> | Asset Inventory</title>
+    
+    
+    <link rel="stylesheet" href="../src/style/main_style.css">
+    <link rel="icon" type="image/png" href="../src/image/logo/varay_logo.png">
+    
+    <?php include "../render/modals.php";?>
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        body { background-color: #fbfbfb; font-size: 0.85rem; color: #212529; font-family: 'Inter', sans-serif; }
+        .main-registry-container { max-width: 1400px; margin: 0 auto; padding-top: 30px; }
+        .table.dataTable thead th { 
+            background-color: #212529 !important; 
+            color: #adb5bd !important; 
+            font-size: 0.65rem; 
+            text-transform: uppercase; 
+            padding: 15px;
+            border: none;
+        }
+        td.dt-control { text-align: center; cursor: pointer; color: #adb5bd; }
+        tr.dt-hasChild td.dt-control i { transform: rotate(90deg); color: #212529; }
+        .drawer-inner { background: #f8f9fa; padding: 20px; border-left: 4px solid #212529; border-radius: 4px; margin: 5px; }
+        .detail-label { font-size: 0.6rem; font-weight: 800; color: #adb5bd; text-transform: uppercase; margin-bottom: 5px; }
+        
+        /* Condition Colors */
+        .cond-new { color: #198754; font-weight: 700; }      /* Green */
+        .cond-used { color: #fd7e14; font-weight: 700; }     /* Orange */
+        .cond-damaged { color: #dc3545; font-weight: 700; }  /* Red */
+        .cond-repair { color: #0d6efd; font-weight: 700; }   /* Blue */
+    </style>
+</head>
+<body>
 
-        <style>
-            body { background-color: #fbfbfb; font-size: 0.8rem; color: #212529; font-family: 'Inter', sans-serif; }
-            .main-registry-container { max-width: 1200px; margin: 0 auto; }
-            .edd-card { border: 1px solid #e9ecef; border-radius: 4px; background: #fff; }
-            .section-title { font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+<div class="row g-0">
+    <div class="col-lg-2"><?php include "../nav/sidebar_nav.php"; ?></div>
+    <div class="col">
+        <div class="container-fluid px-4 mt-4">
+            <div class="main-registry-container">
+                
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h3 class="fw-bold text-uppercase mb-0">Asset Inventory</h3>
+                        <p class="text-muted small">Manage infrastructure and generate barcodes</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-dark btn-sm fw-bold" onclick="downloadAllBarcodes()">
+                            <i class="fa-solid fa-file-zipper me-2"></i>ZIP BARCODES
+                        </button>
+                        <button class="btn btn-dark btn-sm fw-bold px-4" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                            + ADD ASSET
+                        </button>
+                    </div>
+                </div>
 
-            .edd-input-minimal {
-                border: none; border-bottom: 2px solid #dee2e6;
-                padding: 4px 5px 4px 25px; font-size: 0.75rem; font-weight: 600;
-                background: transparent; width: 220px; transition: 0.2s;
-            }
-            .edd-input-minimal:focus { outline: none; border-bottom: 2px solid #212529; }
-
-            .table thead { background-color: #212529; }
-            .table thead th {
-                color: #adb5bd !important; text-transform: uppercase;
-                font-size: 0.6rem; letter-spacing: 1px; padding: 15px 12px; border: none;
-            }
-            
-            .log-row { border-bottom: 1px solid #f8f9fa; transition: background 0.2s; }
-            .log-row:hover { background-color: #fcfcfc; }
-            
-            .btn-expand { color: #adb5bd; cursor: pointer; transition: 0.3s; font-size: 0.7rem; padding: 5px; }
-            .log-row[aria-expanded="true"] .btn-expand { transform: rotate(90deg); color: #212529; }
-
-            .detail-label { font-size: 0.6rem; font-weight: 800; color: #adb5bd; text-transform: uppercase; margin-bottom: 2px; }
-            .asset-id-cell { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
-
-            .collapse {
-                transition: height 0.15s ease-out !important;
-            }
-
-            .collapsing {
-                transition: height 0.15s ease-out !important;
-            }
-            /* Target the remarks and specs boxes */
-            .col-md-3 div[style*="overflow-y: auto"]::-webkit-scrollbar {
-                width: 4px;
-            }
-            .col-md-3 div[style*="overflow-y: auto"]::-webkit-scrollbar-thumb {
-                background: #ccc;
-                border-radius: 10px;
-            }
-            .btn-expand {
-                display: inline-block;
-                transition: transform 0.25s ease, color 0.25s ease;
-            }
-
-            .btn-expand:not(.collapsed) {
-                transform: rotate(90deg);
-                color: #212529;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="row g-0">
-            <div class="col-lg-2"><?php include "../nav/sidebar_nav.php"; ?></div>
-            <div class="col">
-                <div class="container-fluid px-4 mt-5">
-                    <div class="main-registry-container">
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <div>
-                                <h3 class="section-title mb-0">Asset Registry</h3>
-                                <p class="text-muted small mb-0">Management & Infrastructure Log</p>
-                            </div>
-                            <button class="btn btn-dark btn-sm fw-bold px-4" style="font-size: 0.65rem; border-radius: 2px;" data-bs-toggle="modal" data-bs-target="#addProductModal">+ ADD ASSET</button>
-                        </div>
-
-                        <div class="card edd-card shadow-sm">
-                            <div class="card-header bg-white p-3 border-bottom">
-                                <form method="GET" class="d-flex justify-content-between align-items-center">
-                                    <div class="d-flex gap-4 align-items-center">
-                                        <div class="position-relative">
-                                            <i class="fa-solid fa-magnifying-glass position-absolute" style="left:0; top:8px; color:#adb5bd; font-size:0.7rem;"></i>
-                                            <input type="text" name="search" class="edd-input-minimal" placeholder="SEARCH ASSET OR SERIAL..." value="<?= htmlspecialchars($search) ?>">
-                                        </div>
-                                        <div class="d-flex gap-2 align-items-center border-start ps-3">
-                                            <span class="detail-label mb-0">Show:</span>
-                                            <select name="limit" class="border-0 fw-bold text-uppercase" style="font-size: 0.65rem; cursor: pointer; background: transparent;" onchange="this.form.submit()">
-                                                <option value="10" <?= $limit == 10 ? 'selected' : '' ?>>10 Rows</option>
-                                                <option value="20" <?= $limit == 20 ? 'selected' : '' ?>>20 Rows</option>
-                                                <option value="50" <?= $limit == 50 ? 'selected' : '' ?>>50 Rows</option>
-                                                <option value="all" <?= $limit == 'all' ? 'selected' : '' ?>>All Records</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="d-flex gap-4 align-items-center">
-                                        <span class="detail-label mb-0">Filter by category:</span>
-                                        <select name="category" class="border-0 fw-bold text-uppercase" style="font-size: 0.65rem; cursor: pointer; background: transparent;" onchange="this.form.submit()">
-                                            <option value="">ALL CATEGORIES</option>
-                                            <?php
-                                                $cats = mysqli_query($conn, "SELECT category_name FROM categories ORDER BY category_name ASC");
-                                                while($c = mysqli_fetch_assoc($cats)):
-                                                    $sel = ($cat_filter == $c['category_name']) ? 'selected' : '';
-                                                    echo "<option value='".$c['category_name']."' $sel>".$c['category_name']."</option>";
-                                                endwhile;
-                                            ?>
-                                        </select>
-                                    </div>
-                                </form>
-                            </div>
-                            
-                            <div class="d-flex justify-content-between align-items-center m-3">
-                                <h6 class="text-muted small fw-bold text-uppercase mb-0">Asset Inventory</h6>
-                                <button onclick="downloadAllBarcodes()" class="btn btn-sm btn-dark shadow-sm px-3" style="font-size: 0.65rem;">
-                                    <i class="fa-solid fa-file-zipper me-2"></i> DOWNLOAD ZIP (<?= strtoupper($limit) ?>)
+                <div class="card shadow-sm border-0 p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3 bg-light p-2 rounded border">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="detail-label mb-0">Bulk Actions:</span>
+                            <div class="btn-group shadow-sm">
+                                <button type="button" class="btn btn-sm btn-white border fw-bold text-primary" onclick="handleBulkAction('allocate')">
+                                    <i class="fa-solid fa-user-tag me-1"></i> ALLOCATE
+                                </button>
+                                <button type="button" class="btn btn-sm btn-white border fw-bold text-danger" onclick="handleBulkAction('damage')">
+                                    <i class="fa-solid fa-burst me-1"></i> REPORT DAMAGE
                                 </button>
                             </div>
-
-                            <div class="table-responsive">
-                                <table class="table table-sm align-middle mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th width="30"></th>
-
-                                            <th width="120">
-                                                <a href="?<?= http_build_query(array_merge($_GET, ['sort'=>'asset_id','dir'=>($sort=='asset_id' && $sort_dir=='ASC')?'DESC':'ASC'])) ?>"
-                                                class="text-decoration-none text-dark">
-                                                    Asset ID <i class="fa-solid fa-sort ms-1"></i>
-                                                </a>
-                                            </th>
-
-                                            <th>
-                                                <a href="?<?= http_build_query(array_merge($_GET, ['sort'=>'item_name','dir'=>($sort=='item_name' && $sort_dir=='ASC')?'DESC':'ASC'])) ?>"
-                                                class="text-decoration-none text-dark">
-                                                    Item Details <i class="fa-solid fa-sort ms-1"></i>
-                                                </a>
-                                            </th>
-
-                                            <th>
-                                                <a href="?<?= http_build_query(array_merge($_GET, ['sort'=>'category','dir'=>($sort=='category' && $sort_dir=='ASC')?'DESC':'ASC'])) ?>"
-                                                class="text-decoration-none text-dark">
-                                                    Category <i class="fa-solid fa-sort ms-1"></i>
-                                                </a>
-                                            </th>
-
-                                            <th class="text-center">
-                                                <a href="?<?= http_build_query(array_merge($_GET, ['sort'=>'assigned','dir'=>($sort=='assigned' && $sort_dir=='ASC')?'DESC':'ASC'])) ?>"
-                                                class="text-decoration-none text-dark">
-                                                    Assigned To <i class="fa-solid fa-sort ms-1"></i>
-                                                </a>
-                                            </th>
-
-                                            <th class="text-center">
-                                                <a href="?<?= http_build_query(array_merge($_GET, ['sort'=>'condition','dir'=>($sort=='condition' && $sort_dir=='ASC')?'DESC':'ASC'])) ?>"
-                                                class="text-decoration-none text-dark">
-                                                    Condition <i class="fa-solid fa-sort ms-1"></i>
-                                                </a>
-                                            </th>
-
-                                            <th class="text-center">
-                                                <a href="?<?= http_build_query(array_merge($_GET, ['sort'=>'status','dir'=>($sort=='status' && $sort_dir=='ASC')?'DESC':'ASC'])) ?>"
-                                                class="text-decoration-none text-dark">
-                                                    Status <i class="fa-solid fa-sort ms-1"></i>
-                                                </a>
-                                            </th>
-
-                                            <th width="150" class="text-center pe-4">Actions</th>
-                                        </tr>
-                                        </thead>
-
-                                    <tbody>
-                                        <?php
-                                        $query = "SELECT a.*, c.category_name FROM assets a 
-                                                    LEFT JOIN categories c ON a.category_id = c.category_id 
-                                                    WHERE $where_sql 
-                                                    ORDER BY $sort_col $sort_dir 
-                                                    LIMIT $start, $db_limit";
-                                        $result = mysqli_query($conn, $query);
-
-                                        if (mysqli_num_rows($result) > 0):
-                                            while ($row = mysqli_fetch_assoc($result)):
-                                                $drawer_id = "row_detail_" . $row['id'];
-
-                                                // Normalize strings
-                                                $status = strtoupper(trim($row['status'] ?? ''));
-                                                $cond   = strtoupper(trim($row['condition_status'] ?? 'N/A'));
-
-                                                // CONDITION COLOR LOGIC
-                                                if ($cond == 'NEW') {
-                                                    $cond_class = 'text-success';
-                                                } elseif ($cond == 'USED') {
-                                                    $cond_class = 'text-warning';
-                                                } elseif (preg_match('/(DEFECTIVE|DISPOSAL|REPLACEMENT)/', $cond)) {
-                                                    $cond_class = 'text-danger';
-                                                } elseif (preg_match('/(REPAIR|WARRANTY)/', $cond)) {
-                                                    $cond_class = 'text-primary';
-                                                } else {
-                                                    $cond_class = 'text-secondary';
-                                                }
-
-                                                // DISABLE LOGIC
-                                                $isDeployed = ($status === 'DEPLOYED');
-                                                $isAlreadyReported = preg_match('/(DEFECTIVE|REPAIR|WARRANTY|REPLACEMENT|DISPOSAL)/', $cond);
-
-                                                // ===== FIXED REMARKS =====
-                                                $remark_text  = $row['remarks'] ?? 'No remarks';
-                                                $remark_lower = strtolower($remark_text);
-
-                                                $remark_color  = '#343a40';
-                                                $remark_border = '#dee2e6';
-
-                                                if (preg_match('/damage|damaged|broken|defective|crack/', $remark_lower)) {
-                                                    $remark_color  = '#842029'; // red
-                                                    $remark_border = '#f1aeb5';
-                                                } elseif (preg_match('/repair|maintenance|issue|problem/', $remark_lower)) {
-                                                    $remark_color  = '#664d03'; // amber
-                                                    $remark_border = '#ffecb5';
-                                                }
-                                        ?>
-                                        <tr class="log-row">
-                                            <td class="text-center">
-                                                <i class="fa-solid fa-angle-right btn-expand collapsed"
-                                                data-bs-toggle="collapse"
-                                                data-bs-target="#<?= $drawer_id ?>"
-                                                role="button"></i>
-                                            </td>
-                                            <td class="fw-bold asset-id-cell text-dark"><?= $row['asset_id'] ?></td>
-                                            <td>
-                                                <div class="fw-bold text-dark"><?= htmlspecialchars($row['item_name']) ?></div>
-                                                <div class="text-muted" style="font-size: 0.7rem;"><?= htmlspecialchars($row['brand']) ?> / <?= htmlspecialchars($row['model']) ?></div>
-                                            </td>
-                                            <td class="text-muted" style="font-size: 0.75rem;"><?= strtoupper($row['category_name'] ?? 'Uncategorized') ?></td>
-                                            <td class="text-center fw-bold text-primary" style="font-size: 0.75rem;">
-                                                <?= !empty($row['assigned_to']) ? strtoupper(htmlspecialchars($row['assigned_to'])) : '<span class="text-muted fw-normal">—</span>' ?>
-                                            </td>
-                                            <td class="text-center fw-bold <?= $cond_class ?>" style="font-size: 0.65rem;"><?= $cond ?></td>
-                                            <td class="text-center small fw-bold text-nowrap">
-                                                <i class="fa-solid fa-circle me-1" style="font-size: 0.35rem; color: <?= ($row['status'] == 'In Stock') ? '#28a745' : '#17a2b8' ?>;"></i> 
-                                                <?= strtoupper($row['status']) ?>
-                                            </td>
-                                            <td class="text-center pe-4">
-                                                <div class="d-flex justify-content-end gap-1" onclick="event.stopPropagation();">
-                                                    
-                                                    <button type="button" class="btn btn-sm btn-light border-0" onclick="saveAsPng('<?= $row['asset_id'] ?>')" title="Barcode">
-                                                        <i class="fa-solid fa-barcode"></i>
-                                                    </button>
-
-                                                    <button type="button" class="btn btn-sm btn-light btn-outline-dark border-0 text-muted" data-bs-toggle="modal" data-bs-target="#editModal" data-id="<?= $row['id'] ?>" data-assetid="<?= $row['asset_id'] ?>" data-itemname="<?= htmlspecialchars($row['item_name']) ?>" data-brand="<?= htmlspecialchars($row['brand']) ?>" data-category="<?= $row['category_id'] ?>" data-condition="<?= $row['condition_status'] ?>" title="Edit">
-                                                        <i class="fa-solid fa-pen-to-square"></i>
-                                                    </button>
-
-                                                    <button type="button" 
-                                                        class="btn btn-sm btn-outline-dark border-0 shadow-none"
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#allocateModal"
-                                                        data-id="<?= $row['id'] ?>" 
-                                                        data-assetid="<?= htmlspecialchars($row['asset_id']) ?>" 
-                                                        title="Allocate">
-                                                        <i class="fa-solid fa-user-tag text-dark"></i>
-                                                    </button>
-
-                                                    <button type="button" 
-                                                        class="btn btn-sm border-0 btn-light text-danger"
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#damageModal"
-                                                        data-assetid="<?= $row['asset_id'] ?>"
-                                                        data-id="<?= $row['id'] ?>" 
-                                                        title="Report Damage">
-                                                        <i class="fa-solid fa-burst"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-
-                                        <tr id="<?= $drawer_id ?>" class="collapse">
-                                            <td colspan="8" class="p-0 border-0"> 
-                                                <div class="collapse" id="<?= $drawer_id ?>">
-                                                    <div class="bg-light p-4 border-start border-3 border-dark mx-2 my-1 rounded-end shadow-sm">
-                                                        <div class="row g-4">
-                                                            <div class="col-md-3">
-                                                                <label class="text-muted small fw-bold d-block mb-2 text-uppercase" style="font-size: 0.6rem;">Technical Info</label>
-                                                                <div class="mb-1 small">Serial: <span class="font-monospace fw-bold text-dark"><?= $row['serial_number'] ?: 'N/A' ?></span></div>
-                                                                <div class="mb-1 small">Quantity: <span class="fw-bold"><?= sprintf("%02d", $row['quantity']) ?></span></div>
-                                                                <div class="small">Asset ID: <span class="text-muted"><?= $row['asset_id'] ?></span></div>
-                                                            </div>
-
-                                                            <div class="col-md-3">
-                                                                <label class="text-muted small fw-bold d-block mb-2 text-uppercase" style="font-size: 0.6rem;">Timeline & Costs</label>
-                                                                <div class="mb-1 small">Purchase Cost: <span class="fw-bold text-dark">₱<?= number_format($row['cost'] ?? 0, 2) ?></span></div>
-                                                                <div class="mb-1 small">Warranty Cost: <span class="fw-bold text-dark">₱<?= number_format($row['warranty_cost'] ?? 0, 2) ?></span></div>
-                                                                <hr class="my-1 opacity-25">
-                                                                <div class="text-muted" style="font-size: 0.7rem;">
-                                                                    Purchased: <span class="text-dark"><?= $row['purchase_date'] ?: 'N/A' ?></span><br>
-                                                                    Arrival: <span class="text-dark fw-bold"><?= $row['arrival_date'] ?: 'N/A' ?></span><br>
-                                                                    Encoded: <?= date("d M Y", strtotime($row['created_at'])) ?>
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="col-md-3">
-                                                                <label class="text-muted small fw-bold d-block mb-2 text-uppercase" style="font-size: 0.6rem;">Item Specifications</label>
-                                                                <div class="bg-white p-2 border rounded small text-muted" style="white-space: pre-line; font-size: 0.7rem; max-height: 100px; overflow-y: auto;">
-                                                                    <?= !empty($row['specs']) ? htmlspecialchars($row['specs']) : 'No specifications provided.' ?>
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="col-md-3">
-                                                                <label class="text-primary small fw-bold d-block mb-2 text-uppercase" style="font-size: 0.6rem;">Remarks & History</label>
-                                                                <div class="bg-white p-2 border-start border-primary border-3 rounded-end small text-dark" 
-                                                                    style="white-space: pre-line; font-size: 0.7rem; min-height: 60px; max-height: 150px; overflow-y: auto; line-height: 1.4;">
-                                                                    <?php 
-                                                                    if (!empty($row['remarks'])) {
-                                                                        $remarks = htmlspecialchars($row['remarks']);
-                                                                        
-                                                                        // 1. Bold the Date and Time inside brackets [ ... ]
-                                                                        $remarks = preg_replace('/\[(.*?)\]/', '<strong class="text-muted">[$1]</strong>', $remarks);
-                                                                        
-                                                                        // 2. Color the status keywords
-                                                                        $remarks = str_replace('DAMAGE:', '<span class="text-danger fw-bold">DAMAGE:</span>', $remarks);
-                                                                        $remarks = str_replace('RESOLVED:', '<span class="text-success fw-bold">RESOLVED:</span>', $remarks);
-                                                                        $remarks = str_replace('ALLOCATED:', '<span class="text-primary fw-bold">ALLOCATED:</span>', $remarks);
-                                                                        
-                                                                        // 3. Optional: Highlight the status change keywords (GOOD vs REPAIR)
-                                                                        $remarks = str_replace("'GOOD'", '<span class="text-success fw-bold">\'GOOD\'</span>', $remarks);
-                                                                        $remarks = str_replace("'REPAIR'", '<span class="text-warning fw-bold">\'REPAIR\'</span>', $remarks);
-
-                                                                        echo $remarks;
-                                                                    } else {
-                                                                        echo 'No history logs found for this item.';
-                                                                    }
-                                                                    ?>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        </tr>
-
-                                        <?php endwhile; else: ?>
-                                        <tr><td colspan="8" class="text-center py-5 text-muted small fw-bold">NO RECORDS FOUND</td></tr>
-                                        <?php endif; ?>
-                                        </tbody>
-                                </table>
-                            </div>
-
-                            <div class="card-footer bg-white py-3 border-top">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="text-muted fw-bold" style="font-size: 0.55rem; text-uppercase;">
-                                        PAGE <?= $page ?> OF <?= max(1, $total_pages) ?> | TOTAL: <?= $total_rows ?> ASSETS
-                                    </span>
-
-                                    <div class="btn-group shadow-sm">
-                                        <?php 
-                                            // This creates a safe URL string automatically
-                                            $base_params = [
-                                                'search'   => $search,
-                                                'category' => $cat_filter,
-                                                'limit'    => $limit
-                                            ];
-                                            
-                                            $prev_url = "?" . http_build_query(array_merge($base_params, ['page' => $page - 1]));
-                                            $next_url = "?" . http_build_query(array_merge($base_params, ['page' => $page + 1]));
-                                        ?>
-
-                                        <a href="<?= ($page > 1) ? $prev_url : '#' ?>" 
-                                        class="btn btn-outline-dark btn-sm fw-bold <?= ($page <= 1) ? 'disabled' : '' ?>" 
-                                        style="font-size: 0.65rem;">
-                                        PREV
-                                        </a>
-
-                                        <a href="<?= ($page < $total_pages && $limit !== 'all') ? $next_url : '#' ?>" 
-                                        class="btn btn-outline-dark btn-sm fw-bold <?= ($page >= $total_pages || $limit === 'all') ? 'disabled' : '' ?>" 
-                                        style="font-size: 0.65rem;">
-                                        NEXT
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
+                        <div class="text-muted" style="font-size: 0.65rem;">Select multiple items to perform actions</div>
                     </div>
+
+                    <form id="bulkForm" action="process_bulk.php" method="POST">
+                        <table id="assetTable" class="table table-hover table-sm align-middle" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th class="no-sort"><input type="checkbox" id="selectAll"></th>
+                                    <th class="no-sort"></th> 
+                                    <th>Asset ID</th>
+                                    <th>Item Details</th>
+                                    <th>Category</th>
+                                    <th>Assigned To</th>
+                                    <th>Condition</th>
+                                    <th>Status</th>
+                                    <th class="no-sort text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $query = "SELECT a.*, c.category_name FROM assets a LEFT JOIN categories c ON a.category_id = c.category_id ORDER BY a.id DESC";
+                                $result = mysqli_query($conn, $query);
+                                while ($row = mysqli_fetch_assoc($result)):
+                                    // Condition Color Logic
+                                    $cond = strtoupper($row['condition_status']);
+                                    $cond_class = 'text-secondary';
+                                    if ($cond == 'NEW') $cond_class = 'cond-new';
+                                    elseif ($cond == 'USED') $cond_class = 'cond-used';
+                                    elseif (preg_match('/(DEFECTIVE|REPLACEMENT|DISPOSAL)/', $cond)) $cond_class = 'cond-damaged';
+                                    elseif (preg_match('/(REPAIR|WARRANTY)/', $cond)) $cond_class = 'cond-repair';
+                                ?>
+                                <tr class="asset-row" 
+                                    data-serial="<?= htmlspecialchars($row['serial_number']) ?>"
+                                    data-qty="<?= $row['quantity'] ?>"
+                                    data-cost="<?= number_format($row['cost'] ?? 0, 2) ?>"
+                                    data-purchased="<?= $row['purchase_date'] ?>"
+                                    data-specs="<?= htmlspecialchars($row['specs'] ?? '') ?>"
+                                    data-remarks="<?= htmlspecialchars($row['remarks'] ?? '') ?>">
+                                    
+                                    <td><input type="checkbox" name="ids[]" value="<?= $row['id']; ?>"></td>
+                                    <td class="dt-control"><i class="fa-solid fa-angle-right"></i></td>
+                                    <td class="fw-bold asset-id-cell"><?= $row['asset_id'] ?></td>
+                                    <td>
+                                        <div class="fw-bold"><?= htmlspecialchars($row['item_name']) ?></div>
+                                        <div class="text-muted small"><?= htmlspecialchars($row['brand']) ?> / <?= htmlspecialchars($row['model']) ?></div>
+                                    </td>
+                                    <td class="small"><?= strtoupper($row['category_name'] ?? 'Uncategorized') ?></td>
+                                    <td class="fw-bold text-primary small"><?= !empty($row['assigned_to']) ? strtoupper($row['assigned_to']) : '—' ?></td>
+                                    <td class="small <?= $cond_class ?>"><?= $cond ?></td>
+                                    <td><span class="badge rounded-pill <?= ($row['status'] == 'In Stock') ? 'bg-success' : 'bg-info' ?>"><?= strtoupper($row['status']) ?></span></td>
+                                    <td class="text-center">
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-sm btn-light" onclick="saveAsPng('<?= $row['asset_id'] ?>')" title="Barcode">
+                                                <i class="fa-solid fa-barcode"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#editModal" 
+                                                data-id="<?= $row['id'] ?>" data-assetid="<?= $row['asset_id'] ?>" data-itemname="<?= htmlspecialchars($row['item_name']) ?>" 
+                                                data-category="<?= $row['category_id'] ?>" data-condition="<?= $row['condition_status'] ?>">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#allocateModal" 
+                                                data-id="<?= $row['id'] ?>" data-assetid="<?= htmlspecialchars($row['asset_id']) ?>" 
+                                                data-itemname="<?= htmlspecialchars($row['item_name']) ?>" data-currentholder="<?= htmlspecialchars($row['assigned_to']) ?>">
+                                                <i class="fa-solid fa-user-tag text-dark"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-light text-danger" data-bs-toggle="modal" data-bs-target="#damageModal" 
+                                                data-id="<?= $row['id'] ?>" data-assetid="<?= $row['asset_id'] ?>" data-itemname="<?= htmlspecialchars($row['item_name']) ?>">
+                                                <i class="fa-solid fa-burst"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    </form>
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
-        <script>
-            async function saveAsPng(id) {
-                const url = `https://bwipjs-api.metafloor.com/?bcid=code128&text=${encodeURIComponent(id)}&scale=4&includetext&backgroundcolor=ffffff`;
-                try {
-                    const res = await fetch(url);
-                    const blob = await res.blob();
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = `Barcode-${id}.png`;
-                    link.click();
-                } catch (e) { alert("Download failed"); }
+<script>
+    // --- 1. BARCODE FUNCTIONS ---
+    async function saveAsPng(id) {
+        const url = `https://bwipjs-api.metafloor.com/?bcid=code128&text=${encodeURIComponent(id)}&scale=4&includetext&backgroundcolor=ffffff`;
+        try {
+            const res = await fetch(url);
+            const blob = await res.blob();
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Barcode-${id}.png`;
+            link.click();
+        } catch (e) { alert("Download failed"); }
+    }
+
+    async function downloadAllBarcodes() {
+        const zip = new JSZip();
+        const ids = Array.from(document.querySelectorAll('.asset-id-cell')).map(el => el.innerText.trim());
+        if (ids.length === 0) return alert("No assets found.");
+
+        const btn = document.querySelector('[onclick="downloadAllBarcodes()"]');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Zipping...';
+
+        try {
+            const folder = zip.folder("barcodes");
+            for (const id of ids) {
+                const res = await fetch(`https://bwipjs-api.metafloor.com/?bcid=code128&text=${encodeURIComponent(id)}&scale=4&includetext&backgroundcolor=ffffff`);
+                const blob = await res.blob();
+                folder.file(`Barcode-${id}.png`, blob);
+            }
+            const content = await zip.generateAsync({ type: "blob" });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(content);
+            link.download = `Inventory_Barcodes.zip`;
+            link.click();
+        } catch (e) { alert("Error generating ZIP"); } 
+        finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-file-zipper me-2"></i>ZIP BARCODES'; }
+    }
+
+    // --- 2. DATATABLES INITIALIZATION ---
+    function formatDrawer(d) {
+        return `
+            <div class="drawer-inner shadow-sm">
+                <div class="row g-4">
+                    <div class="col-md-3">
+                        <label class="detail-label">Technical Info</label>
+                        <div class="small">Serial: <b>${d.serial || 'N/A'}</b></div>
+                        <div class="small">Quantity: <b>${d.qty}</b></div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="detail-label">Finance</label>
+                        <div class="small">Cost: <b>₱${d.cost}</b></div>
+                        <div class="small">Purchased: <b>${d.purchased || 'N/A'}</b></div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="detail-label">Specs</label>
+                        <div class="bg-white p-2 border rounded small" style="max-height:80px; overflow-y:auto;">${d.specs || 'None'}</div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="detail-label text-primary">History</label>
+                        <div class="bg-white p-2 border-start border-primary border-3 rounded small" style="max-height:80px; overflow-y:auto;">${d.remarks || 'No logs.'}</div>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    $(document).ready(function() {
+        var table = $('#assetTable').DataTable({
+            "order": [[2, "desc"]],
+            "columnDefs": [{ "targets": "no-sort", "orderable": false }]
+        });
+
+        // Drawer Toggle
+        $('#assetTable tbody').on('click', 'td.dt-control', function () {
+            var tr = $(this).closest('tr');
+            var row = table.row(tr);
+            if (row.child.isShown()) {
+                row.child.hide();
+                tr.removeClass('dt-hasChild');
+            } else {
+                row.child(formatDrawer(tr.data())).show();
+                tr.addClass('dt-hasChild');
+            }
+        });
+
+        // Select All Logic (Applies to all pages)
+        $('#selectAll').on('click', function() {
+            var rows = table.rows({ 'search': 'applied' }).nodes();
+            $('input[type="checkbox"]', rows).prop('checked', this.checked);
+        });
+
+        // Ensure bulk form sends checkboxes from all DataTables pages
+        $('#bulkForm').on('submit', function(e) {
+            var form = this;
+            var checkedCount = table.$('input[name="ids[]"]:checked').length;
+            
+            if (checkedCount === 0) {
+                alert("Please select at least one item.");
+                return false;
             }
 
-            async function downloadAllBarcodes() {
-                if (typeof JSZip === 'undefined') return alert("Loading libraries...");
-                const zip = new JSZip();
-                const ids = Array.from(document.querySelectorAll('.asset-id-cell')).map(el => el.innerText.trim()).filter(id => id.length > 0);
-                if (ids.length === 0) return alert("No assets found.");
-
-                const btn = document.querySelector('[onclick="downloadAllBarcodes()"]');
-                const oldText = btn.innerHTML;
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Zipping...';
-
-                try {
-                    const folder = zip.folder("barcodes");
-                    for (const id of ids) {
-                        const res = await fetch(`https://bwipjs-api.metafloor.com/?bcid=code128&text=${encodeURIComponent(id)}&scale=4&includetext&backgroundcolor=ffffff`);
-                        const blob = await res.blob();
-                        folder.file(`Barcode-${id.replace(/[/\\?%*:|"<>]/g, '-')}.png`, blob);
-                    }
-                    const content = await zip.generateAsync({ type: "blob" });
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(content);
-                    link.download = `Asset_Barcodes_${ids.length}.zip`;
-                    link.click();
-                } catch (e) { alert("Error generating ZIP"); } 
-                finally { btn.disabled = false; btn.innerHTML = oldText; }
-            }
-
-            // edit modal script
-            document.addEventListener('DOMContentLoaded', function() {
-                const editModal = document.getElementById('editModal');
-                if (editModal) {
-                    editModal.addEventListener('show.bs.modal', function (event) {
-                        // Button that triggered the modal
-                        const button = event.relatedTarget;
-                        
-                        // Extract info from data-* attributes
-                        const id = button.getAttribute('data-id');
-                        const assetId = button.getAttribute('data-assetid');
-                        const itemName = button.getAttribute('data-itemname');
-                        const category = button.getAttribute('data-category');
-                        const condition = button.getAttribute('data-condition');
-
-                        // 1. Populate Hidden ID and Inputs
-                        document.getElementById('edit-db-id').value = id;
-                        document.getElementById('edit-item-name').value = itemName;
-                        
-                        // 2. Update the Display Headers (The "Asset Identifier" box)
-                        document.getElementById('edit-display-name').textContent = itemName;
-                        document.getElementById('edit-display-assetid').textContent = assetId;
-                        
-                        // 3. Set Dropdown values
-                        // Note: If your data-condition is "NEW" (all caps) and your option value is "New", 
-                        // you might need .toLowerCase() or .toUpperCase() to match.
-                        document.getElementById('edit-category').value = category;
-                        document.getElementById('edit-condition').value = condition;
-                    });
+            // Append checkboxes from other pages to the form as hidden inputs
+            table.$('input[name="ids[]"]:checked').each(function() {
+                if(!$.contains(document, this)){
+                    $(form).append(
+                        $('<input>')
+                            .attr('type', 'hidden')
+                            .attr('name', 'ids[]')
+                            .val(this.value)
+                    );
                 }
             });
+        });
+    });
 
-            // allocate modal script
-            document.addEventListener('DOMContentLoaded', function() {
-                const allocateModal = document.getElementById('allocateModal');
-                if (allocateModal) {
-                    allocateModal.addEventListener('show.bs.modal', function (event) {
-                        const button = event.relatedTarget;
-                        
-                        // Get data from your table row
-                        const id = button.getAttribute('data-id');
-                        const itemName = button.getAttribute('data-itemname');
-                        const assetId = button.getAttribute('data-assetid');
-                        const assignedTo = button.getAttribute('data-currentholder'); // This is your assigned_to column
+    // --- 3. MODAL & BULK SCRIPTS ---
+    function handleBulkAction(action) {
+        var table = $('#assetTable').DataTable();
+        var checkedCount = table.$('input[name="ids[]"]:checked').length;
 
-                        // Map to Modal Elements
-                        document.getElementById('allocate-db-id').value = id;
-                        document.getElementById('modal-item-name').textContent = itemName;
-                        document.getElementById('modal-asset-id').textContent = assetId;
-                        
-                        // Display the current person from the 'assigned_to' column
-                        // If the column is empty in DB, it shows 'Unassigned'
-                        document.getElementById('modal-current-holder').textContent = assignedTo ? assignedTo : "Unassigned";
-                    });
-                }
+        if (checkedCount === 0) {
+            alert("Please select at least one item from the table.");
+            return;
+        }
+
+        let modalId = (action === 'allocate') ? '#allocateModal' : '#damageModal';
+        let modalEl = document.querySelector(modalId);
+        let form = modalEl.querySelector('form');
+
+        // 1. Point form to the bulk processor
+        form.action = 'process_bulk.php'; 
+
+        // 2. Clear previous bulk data and add the current action
+        $(form).find('input[name="bulk_action"]').remove(); 
+        $(form).append(`<input type="hidden" name="bulk_action" value="${action}">`);
+
+        // 3. Mark the main ID field as BULK so the submit interceptor knows what to do
+        // Check if your modal uses 'asset_db_id' or 'id'
+        let idInput = form.querySelector('input[name="asset_db_id"]') || form.querySelector('input[name="id"]');
+        if(idInput) idInput.value = 'BULK';
+
+        // 4. Update UI labels
+        if(action === 'allocate') {
+            document.getElementById('modal-item-name').textContent = checkedCount + " Selected Assets";
+        } else {
+            document.getElementById('damage-display-name').textContent = checkedCount + " Selected Assets";
+        }
+
+        $(modalId).modal('show');
+    }
+
+    // THE INTERCEPTOR: This is the most important part
+    $(document).on('submit', '#allocateModal form, #damageModal form', function(e) {
+        var form = this;
+        var table = $('#assetTable').DataTable();
+        
+        // Look for the "BULK" flag we set in handleBulkAction
+        let idInput = $(form).find('input[name="asset_db_id"]').val() || $(form).find('input[name="id"]').val();
+
+        if (idInput === 'BULK') {
+            // Remove any previously appended hidden IDs to prevent duplicates
+            $(form).find('.temp-bulk-id').remove();
+
+            // Grab every checked ID from every page of the DataTable
+            table.$('input[name="ids[]"]:checked').each(function() {
+                $(form).append(`<input type="hidden" class="temp-bulk-id" name="ids[]" value="${this.value}">`);
             });
+        }
+    });
 
-            // damage modal script
-            document.addEventListener('DOMContentLoaded', function() {
-                const damageModal = document.getElementById('damageModal');
-                if (damageModal) {
-                    damageModal.addEventListener('show.bs.modal', function (event) {
-                        const button = event.relatedTarget;
-                        
-                        // Extract info from data attributes
-                        const id = button.getAttribute('data-id');
-                        const itemName = button.getAttribute('data-itemname');
-                        const assetId = button.getAttribute('data-assetid');
+    function handleBulkAction(action) {
+    var table = $('#assetTable').DataTable();
+    var checkedCount = table.$('input[name="ids[]"]:checked').length;
 
-                        // Populate Modal
-                        document.getElementById('damage-db-id').value = id;
-                        document.getElementById('damage-display-name').textContent = itemName;
-                        document.getElementById('damage-display-id').textContent = assetId;
-                    });
-                }
-            });
-        </script>
-    </body>
+    if (checkedCount === 0) {
+        alert("Please select at least one item from the table.");
+        return;
+    }
+
+    let modalId = (action === 'allocate') ? '#allocateModal' : '#damageModal';
+    let modalEl = document.querySelector(modalId);
+    let form = modalEl.querySelector('form');
+
+    // 1. Change Form Destination to Bulk Processor
+    form.action = '../src/php_script/process_bulk.php'; 
+
+    // 2. Add/Update the 'bulk_action' hidden field
+    $(form).find('input[name="bulk_action"]').remove(); 
+    $(form).append(`<input type="hidden" name="bulk_action" value="${action}">`);
+
+    // 3. Mark the ID field as 'BULK'
+    if(action === 'allocate') {
+        document.getElementById('allocate-db-id').value = 'BULK';
+        document.getElementById('modal-item-name').textContent = checkedCount + " Selected Assets";
+    } else {
+        document.getElementById('damage-db-id').value = 'BULK';
+        document.getElementById('damage-display-name').textContent = checkedCount + " Selected Assets";
+    }
+
+    $(modalId).modal('show');
+}
+
+// CRITICAL: Intercept the Modal Form Submission
+$(document).on('submit', '#allocateModal form, #damageModal form', function(e) {
+    var form = this;
+    var table = $('#assetTable').DataTable();
+    
+    // Check if we are in bulk mode
+    var dbIdValue = $(form).find('#allocate-db-id, #damage-db-id').val();
+
+    if (dbIdValue === 'BULK') {
+        // Remove any old temp IDs
+        $(form).find('.temp-bulk-id').remove();
+
+        // Inject all checked IDs from the DataTables instance
+        table.$('input[name="ids[]"]:checked').each(function() {
+            $(form).append(`<input type="hidden" class="temp-bulk-id" name="ids[]" value="${this.value}">`);
+        });
+        
+        // Ensure bulk_action exists (fail-safe)
+        if($(form).find('input[name="bulk_action"]').length === 0) {
+            let action = (form.id.includes('allocate')) ? 'allocate' : 'damage';
+            $(form).append(`<input type="hidden" name="bulk_action" value="${action}">`);
+        }
+    }
+});
+</script>
+
+</body>
 </html>

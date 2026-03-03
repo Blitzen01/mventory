@@ -9,6 +9,7 @@
     
     include "../render/connection.php"; 
     include "../src/cdn/cdn_links.php";
+    include "../render/app_name.php";
 ?>
 
 <!doctype html>
@@ -16,10 +17,10 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>System Activity Log</title>
+        <title><?php echo $display_name; ?> | System Activity Log</title>
 
         <link rel="stylesheet" href="../src/style/main_style.css">
-        <link rel="icon" type="image/png" href="../src/image/logo/<?php echo $settings_app_logo; ?>">
+        <link rel="icon" type="image/png" href="../src/image/logo/<?php echo $display_logo; ?>">
 
         <style>
             /* Professional EDD System Theme (Grayscale) */

@@ -8,6 +8,7 @@
     }
     include "../render/connection.php"; 
     include "../src/cdn/cdn_links.php";
+    include "../render/app_name.php";
 
     // --- LOGIC: SEARCH & FILTERS ---
     $search = (isset($_GET['search'])) ? mysqli_real_escape_string($conn, (string)$_GET['search']) : '';
@@ -35,37 +36,11 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>Audit Logs | MVentory</title>
+        <title><?php echo $display_name; ?> | Audit Logs</title>
         <link rel="stylesheet" href="../src/style/main_style.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
-        <style>
-            :root { --mono-100: #ffffff; --mono-200: #f8f9fa; --mono-300: #dee2e6; --mono-400: #adb5bd; --mono-800: #212529; }
-            body { background-color: #f4f4f4; font-size: 0.75rem; color: var(--mono-800); font-family: 'Inter', sans-serif; }
-            
-            .log-container { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
-            .compact-card { background: #fff; border: 1px solid var(--mono-300); border-radius: 2px; }
-            
-            /* Typography */
-            .header-title { font-weight: 800; text-transform: uppercase; letter-spacing: 1px; font-size: 1.1rem; }
-            .mono-text { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; }
-            
-            /* Buttons */
-            .btn-mono-outline { border: 1px solid var(--mono-800); color: var(--mono-800); background: transparent; font-weight: 700; font-size: 0.65rem; padding: 6px 12px; border-radius: 0; text-transform: uppercase; transition: 0.2s; text-decoration: none; }
-            .btn-mono-outline:hover { background: var(--mono-800); color: #fff; }
-            .btn-mono-dark { background: var(--mono-800); color: #fff; border: 1px solid var(--mono-800); font-weight: 700; font-size: 0.65rem; padding: 6px 12px; border-radius: 0; text-transform: uppercase; text-decoration: none; }
+        <link rel="stylesheet" href="../src/style/update_logs_style.css">
 
-            /* Table Style */
-            .table-compact thead th { background: var(--mono-800); color: var(--mono-400); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; padding: 12px; border: none; }
-            .table-compact tbody td { padding: 10px 12px; border-bottom: 1px solid #eee; vertical-align: middle; }
-            .log-row:hover { background-color: #fafafa; }
-            
-            .badge-admin { border: 1px solid var(--mono-800); padding: 2px 6px; font-weight: 700; font-size: 0.6rem; color: var(--mono-800); }
-            
-            /* Custom Search */
-            .search-box { border: none; border-bottom: 2px solid var(--mono-300); border-radius: 0; font-size: 0.75rem; font-weight: 600; padding: 5px 0; }
-            .search-box:focus { box-shadow: none; border-color: var(--mono-800); outline: none; }
-        </style>
+        <link rel="icon" type="image/png" href="../src/image/logo/<?php echo $display_logo; ?>">
     </head>
     <body>
         <div class="row g-0">

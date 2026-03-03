@@ -1,7 +1,11 @@
 <?php
+session_start(); // Required to get the admin_username from the session
 include "../../render/connection.php";
 
 if (isset($_POST['save_bulk'])) {
+    // 1. Get Admin Username from Session
+    $admin_username = isset($_SESSION['username']) ? mysqli_real_escape_string($conn, $_SESSION['username']) : 'System';
+
     $prefix           = strtoupper(mysqli_real_escape_string($conn, $_POST['id_prefix'])); 
     $bulk_qty         = (int)$_POST['bulk_qty'];
     $category_id      = mysqli_real_escape_string($conn, $_POST['category_id']);
@@ -31,10 +35,14 @@ if (isset($_POST['save_bulk'])) {
         $start_count = (int)end($parts);
     }
 
+    // Detail message for the log
+    $change_details = "Bulk added asset: $item_name ($brand $model)";
+
     for ($i = 1; $i <= $bulk_qty; $i++) {
         $new_number = $start_count + $i;
         $unique_asset_id = $prefix . "-" . $new_number;
 
+        // 1. Insert into assets table
         $sql = "INSERT INTO assets (
             asset_id, category_id, item_name, brand, model, serial_number,
             assigned_to, condition_status, status, 
@@ -47,7 +55,20 @@ if (isset($_POST['save_bulk'])) {
             '$specs', '$remarks', 1
         )";
         
-        mysqli_query($conn, $sql);
+        if (mysqli_query($conn, $sql)) {
+            // 2. GET THE NUMERIC ID of the asset just inserted
+            // This is what the Foreign Key constraint (edit_log_ibfk_1) is looking for
+            $last_inserted_id = mysqli_insert_id($conn);
+
+            // 3. Insert into edit_logs table using that numeric ID
+            $log_sql = "INSERT INTO edit_log (
+                asset_id, admin_username, change_details, date_updated
+            ) VALUES (
+                '$last_inserted_id', '$admin_username', 'Bulk added asset: $unique_asset_id', NOW()
+            )";
+            
+            mysqli_query($conn, $log_sql);
+        }
     }
 
     header("Location: ../../web_content/inventory.php?success=1");

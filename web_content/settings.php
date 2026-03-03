@@ -40,10 +40,11 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>System Settings | <?php echo $settings_app_name; ?></title>
+        <title><?php echo $app_name; ?> | System Settings</title>
 
         <link rel="stylesheet" href="../src/style/main_style.css">
-        <link rel="icon" type="image/png" href="../src/image/logo/<?php echo $settings_app_logo; ?>">
+        <link rel="icon" type="image/png" href="../src/image/logo/varay_logo.png">
+        <?php include "../render/modals.php";?>
 
         <style>
             .settings-card { border: 1px solid var(--border-color); border-radius: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }

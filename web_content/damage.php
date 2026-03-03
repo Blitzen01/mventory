@@ -1,43 +1,29 @@
 <?php
-// 1. ABSOLUTE TOP: Session and Redirect Logic
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-    if(!isset($_SESSION['user_id'])) {
-        header("Location: login.php");
-        exit();
+    // 1. ABSOLUTE TOP: Session and Redirect Logic
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+        if(!isset($_SESSION['user_id'])) {
+            header("Location: login.php");
+            exit();
+        }
     }
-}
 
-// 2. Database and Timezone
-include "../render/connection.php"; 
-date_default_timezone_set('Asia/Manila');
+    include "../render/connection.php"; 
+    include "../src/cdn/cdn_links.php";
+    include "../render/app_name.php";
+    include "../fetch/fetch_damage.php";
 
-
-include "../src/cdn/cdn_links.php";
-include "../render/modals.php";
-
-// 5. Pagination & Search Logic
-$search = $_GET['search'] ?? '';
-$limit  = $_GET['limit'] ?? 10;
-$page   = $_GET['page'] ?? 1;
-$start  = ($page - 1) * $limit;
-
-$where_clause = "(condition_status LIKE '%DEFECTIVE%' OR condition_status LIKE '%REPAIR%' OR condition_status LIKE '%REPLACEMENT%' OR condition_status LIKE '%DISPOSAL%')
-    AND (asset_id LIKE '%$search%' OR item_name LIKE '%$search%' OR assigned_to LIKE '%$search%')";
-
-$total_query = mysqli_query($conn, "SELECT COUNT(*) as total FROM assets WHERE $where_clause");
-$total_rows = mysqli_fetch_assoc($total_query)['total'];
-$total_pages = ceil($total_rows / $limit);
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Damage Management</title>
+    <title><?php echo $display_name; ?> | Damage Management</title>
     <link rel="stylesheet" href="../src/style/main_style.css">
-    <link rel="stylesheet" href="../src/style/custom_styles.css">
     <link rel="icon" href="../src/image/logo/varay_logo.png" type="image/png">
+    
+    <?php include "../render/modals.php";?>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
     <style>
@@ -205,7 +191,6 @@ $total_pages = ceil($total_rows / $limit);
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const resolveModal = document.getElementById('resolveModal');
         resolveModal.addEventListener('show.bs.modal', event => {

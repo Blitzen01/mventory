@@ -55,3 +55,15 @@
     100% { opacity: 1; }
 }
 
+.btn-monochrome-outline {
+    background-color: transparent;
+    border: 1px solid #d1d1d1;
+    color: #333333;
+    font-weight: 500;
+}
+
+.btn-monochrome-outline:hover {
+    background-color: #f8f9fa;
+    border-color: #1a1a1a;
+    color: #000000;
+}

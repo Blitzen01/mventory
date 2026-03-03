@@ -1,62 +1,29 @@
 <?php
-session_start();
-if(!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
+    session_start();
+    if(!isset($_SESSION['user_id'])) {
+        header("Location: login.php");
+        exit();
+    }
 
-include "../render/connection.php"; 
-include "../src/cdn/cdn_links.php";
-include "../render/modals.php";
+    include "../render/connection.php"; 
+    include "../src/cdn/cdn_links.php";
+    include "../render/app_name.php";
+    include "../fetch/fetch_account.php";
 
-$limit = 10;
-
-// Pagination Helper Function
-function get_offset($param, $limit) {
-    $page = isset($_GET[$param]) && is_numeric($_GET[$param]) ? (int)$_GET[$param] : 1;
-    return ($page < 1) ? 0 : ($page - 1) * $limit;
-}
-
-$offset = get_offset('page', $limit);
-$arc_offset = get_offset('arc_page', $limit);
-$page = (int)($offset / $limit) + 1;
-$arc_page = (int)($arc_offset / $limit) + 1;
-
-// Fetch Counts
-$total_active = $conn->query("SELECT COUNT(*) as total FROM USERS")->fetch_assoc()['total'];
-$total_archived = $conn->query("SELECT COUNT(*) as total FROM deleted_users")->fetch_assoc()['total'];
-
-$total_pages = ceil($total_active / $limit);
-$total_arc_pages = ceil($total_archived / $limit);
-
-// Fetch Data (Using Template Literals for clarity)
-$user_result = $conn->query("SELECT * FROM USERS LIMIT $limit OFFSET $offset");
-$archived_result = $conn->query("SELECT * FROM deleted_users LIMIT $limit OFFSET $arc_offset");
 ?>
 <!doctype html>
 <html lang="en">
     <head>
+        
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>User Management</title>
+        <title><?php echo $display_name; ?> | Security Logs</title>
+        <link rel="shortcut icon" href="../src/image/logo/varay_logo.png" type="image/x-icon">
+
         <link rel="stylesheet" href="../src/style/main_style.css">
         <link rel="stylesheet" href="../src/style/accounts_style.css">
-        <link rel="icon" type="image/png" href="../src/image/logo/varay_logo.png">
-
-        <style>
-            .btn-monochrome-outline {
-                background-color: transparent;
-                border: 1px solid #d1d1d1;
-                color: #333333;
-                font-weight: 500;
-            }
-
-            .btn-monochrome-outline:hover {
-                background-color: #f8f9fa;
-                border-color: #1a1a1a;
-                color: #000000;
-            }
-        </style>
+        
+        <?php include "../render/modals.php";?>
     </head>
     <body>
         <div class="row">

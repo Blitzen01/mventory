@@ -9,6 +9,7 @@
     
     include "../render/connection.php"; 
     include "../src/cdn/cdn_links.php";
+    include "../render/app_name.php";
 
     // --- LOGIC: SEARCH & PAGINATION ---
     $limit = 10;
@@ -51,7 +52,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Security Logs | Varay Inventory</title>
+        <title><?php echo $display_name; ?> | Security Logs</title>
         <link rel="stylesheet" href="../src/style/main_style.css">
         <link rel="icon" type="image/png" href="../src/image/logo/varay_logo.png">
 
@@ -157,7 +158,7 @@
                                             <?php while($log = mysqli_fetch_assoc($log_result)): 
                                                 // Data handled by SQL JOIN for better performance
                                                 $name = ($log['first_name']) ? $log['first_name'].' '.$log['last_name'] : "System/Guest";
-                                                $img = (!empty($log['profile_image'])) ? $log['profile_image'] : "../src/image/profiles/default.png";
+                                                $img = (!empty($log['profile_image'])) ? $log['profile_image'] : "../src/image/profiles/default.jpg";
                                             ?>
                                             <tr class="log-row">
                                                 <td class="ps-4">
@@ -166,7 +167,7 @@
                                                 </td>
                                                 <td>
                                                     <div class="d-flex align-items-center">
-                                                        <img src="<?php echo $img; ?>" class="user-avatar me-2" onerror="this.src='../src/image/profiles/default.png'">
+                                                        <img src="<?php echo $img; ?>" class="user-avatar me-2" onerror="this.src='../src/image/profiles/default.jpg'">
                                                         <div>
                                                             <div class="fw-bold text-dark small"><?php echo htmlspecialchars($name); ?></div>
                                                             <small class="text-muted" style="font-size: 0.65rem;">UID: #<?php echo $log['user_id']; ?></small>
