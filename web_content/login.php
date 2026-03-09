@@ -23,6 +23,8 @@
                     <img src="../src/image/logo/varay_logo.png" alt="Logo" class="logo-img">
                     <h4 class="fw-bold text-dark mb-1 text-uppercase" style="letter-spacing: 2px;">Sign In</h4>
                     <p class="text-muted small mb-4">Authorized Access Only</p>
+                    
+<?php password_hash('admin123', PASSWORD_DEFAULT); // Example hash for design preview ?>
                 </div>
 
                 <form method="POST" action="../src/php_script/check_login_credentials.php">
